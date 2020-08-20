@@ -1,13 +1,12 @@
-#from flask import current_app as app
 from hashlib import md5
-#from app import constants
 import clang.cindex
 import os
 import gzip
 import json
 from random import choice, random
 import string
-from constants import *
+import constants
+import config
 
 
 def get_binary_operation(node):
@@ -32,71 +31,59 @@ class ComplexityCalculator:
         self.ast = ast
         self.row_counts = row_counts
         self.ignore_filename = ignore_filename
-        self.scalars = {
-            'MODULO' : constants.MODULO,
-            'ADD' : constants.ADD,
-            'SUBTRACT' : constants.SUBTRACT,
-            'MULTIPLY' : constants.MULTIPLY,
-            'DIVIDE' : constants.DIVIDE,
-            'FOR_STATEMENT' : constants.FOR_STATEMENT,
-            'DO_STATEMENT' : constants.DO_STATEMENT,
-            'WHILE_STATEMENT' : constants.WHILE_STATEMENT,
-            'IF_STATEMENT' : constants.IF_STATEMENT,
-            'COMPARISON_OPERATORS' : constants.COMPARISON_OPERATORS,
-            'INCREMENT' : constants.INCREMENT,
-            'LOGICAL_OPERATORS' : constants.LOGICAL_OPERATORS
+
+        self.weights = {
+            clang.cindex.CursorKind.FOR_STMT: constants.FOR_STATEMENT,
+            clang.cindex.CursorKind.WHILE_STMT: constants.WHILE_STATEMENT,
+            clang.cindex.CursorKind.DO_STMT: constants.DO_STATEMENT,
+            clang.cindex.CursorKind.IF_STMT: constants.IF_STATEMENT,
+
+            '+': constants.ADD,
+            '+=': constants.ADD,
+
+            '-': constants.SUBTRACT,
+            '-=': constants.SUBTRACT,
+
+            '*': constants.MULTIPLY,
+            '*=': constants.MULTIPLY,
+
+            '/': constants.DIVIDE,
+            '/=': constants.DIVIDE,
+
+            '%': constants.MODULO,
+            '%=': constants.MODULO,
+
+            '<': constants.COMPARISON_OPERATORS,
+            '<=': constants.COMPARISON_OPERATORS,
+            '==': constants.COMPARISON_OPERATORS,
+            '!=': constants.COMPARISON_OPERATORS,
+            '>=': constants.COMPARISON_OPERATORS,
+            '>': constants.COMPARISON_OPERATORS,
+
+            '!': constants.LOGICAL_OPERATORS,
+            '&&': constants.LOGICAL_OPERATORS,
+            '||': constants.LOGICAL_OPERATORS,
+
+            '++': constants.INCREMENT,
+            '--': constants.INCREMENT
         }
 
-
     def _dfs(self, node):
-        result = 0
         if str(node.extent.start.file) != self.ignore_filename and node.extent.start.file is not None:
-            return result
+            return 0
 
-        if node.kind == clang.cindex.CursorKind.BINARY_OPERATOR:
-            operation = get_binary_operation(node)[0]
-            if operation == '*':
-                result += self.scalars['MULTIPLY']
-            elif operation == '-':
-                result += self.scalars['SUBTRACT']
-            elif operation == '+':
-                result += self.scalars['ADD']
-            elif operation == '/':
-                result += self.scalars['DIVIDE']
-            elif operation == '%':
-                result += self.scalars['MODULO']
-            elif operation in {'<', '<=', '==', '!=' '>=', '>'}:
-                result += self.scalars['COMPARISON_OPERATORS']
-            elif operation in {'&&', '||'}:
-                result += self.scalars['LOGICAL_OPERATORS']
-        if node.kind == clang.cindex.CursorKind.COMPOUND_ASSIGNMENT_OPERATOR:
-            operation = get_binary_operation(node)[0]
-            if operation == '*=':
-                result += self.scalars['MULTIPLY']
-            elif operation == '-=':
-                result += self.scalars['SUBTRACT']
-            elif operation == '+=':
-                result += self.scalars['ADD']
-            elif operation == '/=':
-                result += self.scalars['DIVIDE']
-            elif operation == '%=':
-                result += self.scalars['MODULO']
-        if node.kind == clang.cindex.CursorKind.UNARY_OPERATOR:
-            operation = get_unary_operation(node)
-            if operation == '!':
-                result += self.scalars['LOGICAL_OPERATORS']
-            else:
-                result += self.scalars['INCREMENT']
-        elif node.kind == clang.cindex.CursorKind.FOR_STMT:
-            result += self.scalars['FOR_STATEMENT']
-        elif node.kind == clang.cindex.CursorKind.WHILE_STMT:
-            result += self.scalars['WHILE_STATEMENT']
-        elif node.kind == clang.cindex.CursorKind.DO_STMT:
-            result += self.scalars['DO_STATEMENT']
-        elif node.kind == clang.cindex.CursorKind.IF_STMT:
-            result += self.scalars['IF_STATEMENT']
+        key = None
 
-        result *= self.row_counts.get(node.extent.start.line, 0)
+        if node.kind in {clang.cindex.CursorKind.BINARY_OPERATOR, clang.cindex.CursorKind.COMPOUND_ASSIGNMENT_OPERATOR} :
+            key = get_binary_operation(node)[0]
+        elif node.kind == clang.cindex.CursorKind.UNARY_OPERATOR:
+            key = get_unary_operation(node)
+        elif node.kind in {clang.cindex.CursorKind.FOR_STMT, clang.cindex.CursorKind.WHILE_STMT, clang.cindex.CursorKind.DO_STMT, clang.cindex.CursorKind.IF_STMT}:
+            key = node.kind
+
+        result = 0
+        if key is not None:
+            result = self.weights.get(key, 0) * self.row_counts.get(node.extent.start.line, 0)
 
         for child in node.get_children():
             result += self._dfs(child)
@@ -112,7 +99,8 @@ class CodeProcessor:
     def __init__(self, code):
         self.code = code
         self.filename = md5(code.encode()).hexdigest()[:10]
-        self.abs_filename = os.path.join("/home/ubuntu/work/codes", self.filename)
+        self.working_dir = config.WORKING_CODES_DIR
+        self.abs_filename = os.path.join(self.working_dir, self.filename)
 
     def _source_code_filename(self):
         return self.filename + '.cpp'
@@ -124,8 +112,8 @@ class CodeProcessor:
         return self._source_code_filename() + '.gcov.json.gz'
 
     def _save_code(self):
-        os.chdir("/home/ubuntu/work/codes")
-        os.system('rm ' + str(self.filename) + '*')
+        os.chdir(self.working_dir)
+        os.system('rm ' + str(self.filename) + '*' + ' ||:')
         with open(self._source_code_filename(), 'w') as f:
             f.write(self.code)
 
@@ -135,26 +123,27 @@ class CodeProcessor:
 
     def _compile_for_gcov(self):
         self._save_code()
-        os.chdir("/home/ubuntu/work/codes")
-        os.system('g++ -fprofile-arcs -ftest-coverage ' + self._source_code_filename() + ' -o ' + self._executable_filename())
+        os.chdir(self.working_dir)
+        os.system(
+            'g++-10 -fprofile-arcs -ftest-coverage ' + self._source_code_filename() + ' -o ' + self._executable_filename())
 
     def _standard_compile(self):
         self._save_code()
-        os.chdir("/home/ubuntu/work/codes")
-        return os.system('g++ ' + self._source_code_filename() + ' -o ' + self._executable_filename())
+        os.chdir(self.working_dir)
+        return os.system('g++-10 ' + self._source_code_filename() + ' -o ' + self._executable_filename())
 
     def _execute_file(self):
-        os.chdir("/home/ubuntu/work/codes")
+        os.chdir(self.working_dir)
         return os.popen('./' + self._executable_filename()).read()
 
     def _run_gcov(self):
-        os.chdir("/home/ubuntu/work/codes")
-        os.system('/gcov -r -i ' + self._source_code_filename())
+        os.chdir(self.working_dir)
+        os.system('gcov-10 -r -i ' + self._source_code_filename())
 
     # DFS
     def _extract_key_kinds_from_tree(self, node):
         result = list()
-        if str(node.extent.start.file) != self._source_code_filename() and node.extent.start.file != None:
+        if str(node.extent.start.file) != self._source_code_filename() and node.extent.start.file is not None:
             return result
         if node.kind == clang.cindex.CursorKind.INTEGER_LITERAL:
             result.append(
@@ -200,7 +189,7 @@ class CodeProcessor:
     def _extract_ast(self):
         self._save_code()
         idx = clang.cindex.Index.create()
-        tu = idx.parse(self._source_code_filename(), ['-I', "/Library/Developer/CommandLineTools/usr/lib/"])
+        tu = idx.parse(self._source_code_filename(), ['-I', config.CLANG_LIBRARY_DIR])
         return tu.cursor
 
     def get_key_locations(self):
@@ -229,7 +218,8 @@ class CodeProcessor:
     def check_compilation(self):
         return self._standard_compile() == 0
 
-class KeyLocation():
+
+class KeyLocation:
     def __init__(self, kl):
         self.start_row = kl[0][0]
         self.start_column = kl[0][1]
@@ -313,54 +303,55 @@ class KeyLocation():
             return ''.join([self.value[0], random_text, self.value[-1]])
         return self.value
 
+
 def _str_replace(s, si, ei, new):
     return s[:si] + new + s[ei:]
+
 
 def construct_code(code, key_locations, new_variation_values):
     source_code = code.split('\n')
     variations = list(zip(key_locations, new_variation_values))
     variations.sort(key=lambda x: (x[0].start_row, -x[0].start_column))
-    for i, variation in enumerate(variations):
+    for variation in variations:
         row = variation[0].start_row - 1
         cs, ce = variation[0].start_column - 1, variation[0].end_column - 1
         source_code[row] = _str_replace(source_code[row], cs, ce, variation[1])
     new_source_code = '\n'.join(source_code)
     return new_source_code
 
-def work(code, edit, mode):
+
+def get_key_locations(code):
     cp = CodeProcessor(code)
     key_locations = cp.get_key_locations()
-    if mode == 1:
-        final_list = list()
-        for element in key_locations:
-            temp_list = list()
-            temp_list.append(str(element[0][0]))
-            temp_list.append(str(element[0][1]))
-            temp_list.append(str(element[1][0]))
-            temp_list.append(str(element[1][1]))
-            temp_list.append(str(element[2]))
-            temp_list.append(str(element[3]))
-            final_list.append(";".join(temp_list))
-        print (final_list)
-        return final_list
-    else:
-        output = {}
-        list_sort = list()
-        for i in range(0, 30):
-            new_variation = list()
-            key_loc = list()
-            j = 0
-            for key_location in key_locations:
-                kl = KeyLocation(key_location)
-                kl.set_extra_info(edit[j])
-                key_loc.append(kl)
-                new_variation.append(kl.generate_variation())
-                j = j + 1
-            new_source_code = construct_code(code, key_loc, new_variation)
-            new_cp = CodeProcessor(new_source_code)
-            if (new_source_code not in output):
-                output[new_source_code] = new_cp.get_output()
-                list_sort.append((1, new_source_code, output[new_source_code]))
-                print (new_source_code)
-        list_sort.sort()
-        return list_sort
+    return_list = list()
+
+    for element in key_locations:
+        temp_list = [element[0][0], element[0][1], element[1][0], element[1][1], element[2], element[3]]
+        return_list.append(';'.join(map(str, temp_list)))
+
+    print(return_list)
+    return return_list
+
+
+def generate_variation(code, edit):
+    code = code.replace('\xa0', ' ')
+    cp = CodeProcessor(code)
+    key_locations = cp.get_key_locations()
+    output = {}
+    return_list = list()
+    for i in range(30):
+        new_variation = list()
+        key_loc = list()
+        for (idx, key_location) in enumerate(key_locations):
+            kl = KeyLocation(key_location)
+            kl.set_extra_info(edit[idx])
+            key_loc.append(kl)
+            new_variation.append(kl.generate_variation())
+        new_source_code = construct_code(code, key_loc, new_variation)
+        new_cp = CodeProcessor(new_source_code)
+        if new_source_code not in output:
+            output[new_source_code] = new_cp.get_output()
+            return_list.append((new_cp.get_complexity(), new_source_code, output[new_source_code]))
+            print(new_source_code)
+    return_list.sort()
+    return return_list

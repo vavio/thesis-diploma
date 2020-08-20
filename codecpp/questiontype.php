@@ -38,6 +38,9 @@ require_once($CFG->libdir . '/questionlib.php');
 class qtype_codecpp extends question_type {
 
     public $wizardpagesnumber = 2;
+//    public $service_url = "http://10.1.20.10:5000";
+    public $service_url = "http://0.0.0.0:5000";
+//    public $service_url = "ec2-34-207-163-41.compute-1.amazonaws.com/get_key_locations";
 
     public function finished_edit_wizard($form) {
         return isset($form->savechanges);
@@ -112,8 +115,7 @@ class qtype_codecpp extends question_type {
                 return;
 
             case 'datasetdefinitions':
-                echo $OUTPUT->heading_with_help("Choose Elements",
-                        "abc1","abc2");
+                echo $OUTPUT->heading_with_help("Choose Elements", "codecpp_help");
                 break;
 
         }
@@ -260,15 +262,11 @@ class qtype_codecpp extends question_type {
             $editable .= join(";", $temp);
             $editable .= "\n";
         }
-        $cleaned_questiontext = htmlspecialchars_decode($question->questiontext);
-        $cleaned_questiontext = str_replace("</p>", "\n", $cleaned_questiontext);
-        $cleaned_questiontext = str_replace("<p>", "", $cleaned_questiontext);
         $call_data = array(
-            "source_code" => $cleaned_questiontext,
+            "source_code" => $this->strip_html($question->questiontext),
             "edit" => $editable
         );
-        //$callresult = $this->callAPI("POST", "http://localhost:5000/codeprocessor", json_encode($call_data));
-        $callresult = $this->callAPI("POST", "ec2-34-207-163-41.compute-1.amazonaws.com/codeprocessor", json_encode($call_data));
+        $callresult = $this->callAPI("POST", $this->service_url . "/codeprocessor", json_encode($call_data));
         $callresult = json_decode($callresult, true);
         for ($i=0; $i<count($callresult); $i++){
             $question_text = $callresult[$i]['new_source_code'];
@@ -284,39 +282,39 @@ class qtype_codecpp extends question_type {
     }
 
     public function callAPI($method, $url, $data){
-       $curl = curl_init();
+        $curl = curl_init();
 
-       switch ($method){
-          case "POST":
-             curl_setopt($curl, CURLOPT_POST, 1);
-             if ($data)
-                curl_setopt($curl, CURLOPT_POSTFIELDS, $data);
-             break;
-          case "PUT":
-             curl_setopt($curl, CURLOPT_CUSTOMREQUEST, "PUT");
-             if ($data)
-                curl_setopt($curl, CURLOPT_POSTFIELDS, $data);
-             break;
-          default:
-             if ($data)
-                $url = sprintf("%s?%s", $url, http_build_query($data));
-       }
+        switch ($method){
+            case "POST":
+                curl_setopt($curl, CURLOPT_POST, 1);
+                if ($data)
+                    curl_setopt($curl, CURLOPT_POSTFIELDS, $data);
+                break;
+            case "PUT":
+                curl_setopt($curl, CURLOPT_CUSTOMREQUEST, "PUT");
+                if ($data)
+                    curl_setopt($curl, CURLOPT_POSTFIELDS, $data);
+                break;
+            default:
+                if ($data)
+                    $url = sprintf("%s?%s", $url, http_build_query($data));
+        }
 
-       // OPTIONS:
-       curl_setopt($curl, CURLOPT_URL, $url);
-       curl_setopt($curl, CURLOPT_HTTPHEADER, array(
-          'APIKEY: 111111111111111111111',
-          'Content-Type: application/json',
-       ));
-       curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
-       curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
-       curl_setopt($curl, CURLOPT_CONNECTTIMEOUT, 100);
+        // OPTIONS:
+        curl_setopt($curl, CURLOPT_URL, $url);
+        curl_setopt($curl, CURLOPT_HTTPHEADER, array(
+            'APIKEY: 111111111111111111111',
+            'Content-Type: application/json',
+        ));
+        curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+        curl_setopt($curl, CURLOPT_CONNECTTIMEOUT, 100);
 
-       // EXECUTE:
-       $result = curl_exec($curl);
-       if(!$result){die("Connection Failure");}
-       curl_close($curl);
-       return $result;
+        // EXECUTE:
+        $result = curl_exec($curl);
+        if(!$result){die("Connection Failure");}
+        curl_close($curl);
+        return $result;
     }
 
     public function save_question_options($question) {
@@ -340,6 +338,7 @@ class qtype_codecpp extends question_type {
             $answer->id = $DB->insert_record('question_answers', $answer);
         }
 
+        $shell_output = 'no_output';
         $answer->answer = (string)$shell_output;
         $answer->fraction = 1;
         $DB->update_record('question_answers', $answer);
@@ -376,9 +375,7 @@ class qtype_codecpp extends question_type {
 
     public function get_question_substring($question, $from, $to){
         global $CFG;
-        $cleaned_questiontext = htmlspecialchars_decode($question->questiontext);
-        $cleaned_questiontext = str_replace("</p>", "\n", $cleaned_questiontext);
-        $cleaned_questiontext = str_replace("<p>", "", $cleaned_questiontext);
+        $cleaned_questiontext = $this->strip_html($question->questiontext);
         $lines = explode("\n", $cleaned_questiontext);
         $result = array();
         for ($i=$from-1; $i<=$to-1; $i++){
@@ -387,16 +384,24 @@ class qtype_codecpp extends question_type {
         return $result;
     }
 
+    private function strip_html($question_text){
+        $decoded = htmlspecialchars_decode($question_text);
+        $tmp = preg_replace('/(\s*\#include\s+)(["<])([^">]+)([">])/m', '\\1---\\3---', $decoded);
+        $tmp = preg_replace('/<br ?\/?>/m', "\n", $tmp);
+        $stripped = strip_tags($tmp);
+        $tmp = preg_replace('/(\s*\#include\s+)(---)([^">\n]+)(---)/m', '\\1<\\3>', $stripped);
+        $tmp = strtr($tmp, array_flip(get_html_translation_table(HTML_ENTITIES, ENT_QUOTES)));
+//        return explode('!!!', $tmp);
+        return $tmp;
+    }
+
     public function find_editable($question_text){
         global $CFG;
-        $cleaned_questiontext = htmlspecialchars_decode($question_text);
-        $cleaned_questiontext = str_replace("</p>", "\n", $cleaned_questiontext);
-        $cleaned_questiontext = str_replace("<p>", "", $cleaned_questiontext);
         $call_data = array(
-            "source_code" => $cleaned_questiontext
+            "source_code" => $this->strip_html($question_text)
         );
-        //$callresult = $this->callAPI("POST", "http://localhost:5000/get_key_locations", json_encode($call_data));
-        $callresult = $this->callAPI("POST", "ec2-34-207-163-41.compute-1.amazonaws.com/get_key_locations", json_encode($call_data));
+        $callresult = $this->callAPI("POST", $this->service_url . "/get_key_locations", json_encode($call_data));
+
         $callresult = json_decode($callresult, true);
         $result_data = array();
         for ($i=0; $i<count($callresult['result']['key_locations']); $i++){
@@ -427,24 +432,20 @@ class qtype_codecpp extends question_type {
     protected function initialise_question_instance(question_definition $question, $questiondata) {
         global $DB;
         parent::initialise_question_instance($question, $questiondata);
-        $sql = "SELECT a.id
-                  FROM {dataset_codecpp} a
-                 WHERE a.category = ?";
-        $temp = $DB->get_records_sql($sql, array($question->id));
-        $minn = INF;
-        $maxx = -1;
-        foreach ($temp as $t){
-            if ($t->id < $minn)
-                $minn = $t->id;
-            if ($t->id > $maxx)
-                $maxx = $t->id;
-        }
-        $num = rand($minn, $maxx);
-        $dataset = array();
-        for ($i=$minn; $i<=$maxx; $i++){
-            $res = $DB->get_record("dataset_codecpp", array('id' => $i));
-            $dataset[] = $res;
-        }
+        $range_sql = "SELECT 
+                        MIN(a.id) as min_id,
+                        MAX(a.id) as max_id
+                        FROM {dataset_codecpp} a
+                        WHERE a.category = :questionid";
+        $range = $DB->get_record_sql($range_sql, array('questionid' => $question->id));
+        $num = rand($range->min_id, $range->max_id);
+
+        $dataset_sql = "SELECT *
+                        FROM {dataset_codecpp} qcpp
+                        WHERE qcpp.category = :questionid";
+        $dataset = $DB->get_records_sql($dataset_sql, array('questionid' => $question->id));
+
+        // TODO VVV
         $res = $DB->get_record("dataset_codecpp", array('id' => $num));
         $question->dataset = $dataset;
         $question->trueanswerid =  $questiondata->options->trueanswer;

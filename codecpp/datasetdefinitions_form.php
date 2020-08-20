@@ -70,8 +70,6 @@ class question_dataset_dependent_definitions_form extends question_wizard_form {
     }
 
     protected function definition() {
-        global $SESSION;
-
         $mform = $this->_form;
         $mform->setDisableShortforms();
 
@@ -143,7 +141,7 @@ class question_dataset_dependent_definitions_form extends question_wizard_form {
             }
             $mform->addElement('advcheckbox', "editable[{$count}]", "Edit", "", "", array(0, 1));
             $count = $count + 1;
-        }
+        }$label = $label . "<p style
         //$this->qtypeobj->generate_datasets($this->question);
 
         // Temporary strings.

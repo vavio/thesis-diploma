@@ -24,6 +24,7 @@
  */
 
 $string['correctanswer'] = 'Correct answer';
+$string['help'] = 'Select the range of each elements';
 $string['correctanswerfalse'] = 'The correct answer is \'False\'.';
 $string['correctanswertrue'] = 'The correct answer is \'True\'.';
 $string['false'] = 'False';
