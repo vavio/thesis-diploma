@@ -15,19 +15,22 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Version information for the codecpp question type.
+ * Short-answer question type upgrade code.
  *
  * @package    qtype
- * @subpackage codecpp
- * @copyright  1999 onwards Martin Dougiamas  {@link http://moodle.com}
+ * @subpackage shortanswer
+ * @copyright  2011 The Open University
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->component = 'qtype_codecpp';
-$plugin->version   = 2020082700;
+/**
+ * Upgrade code for the essay question type.
+ * @param int $oldversion the version we are upgrading from.
+ */
+function xmldb_qtype_codecpp_upgrade($oldversion) {
+    global $CFG;
 
-$plugin->requires  = 2020060900;
-
-$plugin->maturity  = MATURITY_BETA;
+    return true;
+}

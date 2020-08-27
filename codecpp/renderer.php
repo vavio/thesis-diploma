@@ -38,7 +38,6 @@ defined('MOODLE_INTERNAL') || die();
 class qtype_codecpp_renderer extends qtype_renderer {
     public function formulation_and_controls(question_attempt $qa,
             question_display_options $options) {
-        global $USER;
         $question = $qa->get_question();
         $currentanswer = $qa->get_last_qt_var('answer');
         $currenttext = $qa->get_last_qt_var('_qtext_');
@@ -78,8 +77,7 @@ class qtype_codecpp_renderer extends qtype_renderer {
 
     public function format_newquestiontext($qa, $temp){
         $question = $qa->get_question();
-        return $question->format_text($temp, $this->questiontextformat,
-                $qa, 'question', 'questiontext', $this->id);
+        return $question->format_text($temp, FORMAT_PLAIN, $qa, 'question', 'questiontext', $question->id);
     }
 
     public function specific_feedback(question_attempt $qa) {

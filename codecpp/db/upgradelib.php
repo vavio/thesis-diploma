@@ -45,23 +45,16 @@ class qtype_codecpp_qe2_attempt_updater extends question_qtype_attempt_updater {
         }
     }
 
+    public function was_answered($state) {
+        return !empty($state->answer);
+    }
+
     public function response_summary($state) {
-        if (is_numeric($state->answer)) {
-            if (array_key_exists($state->answer, $this->question->options->answers)) {
-                return $this->question->options->answers[$state->answer]->answer;
-            } else {
-                $this->logger->log_assumption("Dealing with a place where the
-                        student selected a choice that was later deleted for
-                        true/false question {$this->question->id}");
-                return null;
-            }
+        if (!empty($state->answer)) {
+            return $state->answer;
         } else {
             return null;
         }
-    }
-
-    public function was_answered($state) {
-        return !empty($state->answer);
     }
 
     public function set_first_step_data_elements($state, &$data) {
@@ -71,8 +64,8 @@ class qtype_codecpp_qe2_attempt_updater extends question_qtype_attempt_updater {
     }
 
     public function set_data_elements_for_step($state, &$data) {
-        if (is_numeric($state->answer)) {
-            $data['answer'] = (int) ($state->answer == $this->question->options->trueanswer);
+        if (!empty($state->answer)) {
+            $data['answer'] = $state->answer;
         }
     }
 }

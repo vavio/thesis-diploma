@@ -4,28 +4,28 @@
     xsi:noNamespaceSchemaLocation="../../../../lib/xmldb/xmldb.xsd"
 >
   <TABLES>
-    <TABLE NAME="question_codecpp" COMMENT="Options for True-False questions">
+    <TABLE NAME="question_codecpp" COMMENT="Options for codecpp questions">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
-        <FIELD NAME="question" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Foreign key references question.id."/>
-        <FIELD NAME="trueanswer" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Foreign key references question_answers.id. The 'True' choice."/>
-        <FIELD NAME="falseanswer" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Foreign key references question_answers.id. The 'False' choice."/>
+        <FIELD NAME="questionid" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Foreign key references question.id."/>
+        <FIELD NAME="options" TYPE="text" NOTNULL="true" SEQUENCE="false" COMMENT="Variation options selected for this question"/>
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
-        <KEY NAME="question" TYPE="foreign" FIELDS="question" REFTABLE="question" REFFIELDS="id"/>
+        <KEY NAME="questionid" TYPE="foreign" FIELDS="questionid" REFTABLE="question" REFFIELDS="id"/>
       </KEYS>
     </TABLE>
-    <TABLE NAME="dataset_codecpp" COMMENT="Datasets for every question">
+    <TABLE NAME="question_codecpp_dataset" COMMENT="Different variations for codecpp question">
       <FIELDS>
-        <FIELD NAME="category" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
-        <FIELD NAME="questiontext" TYPE="text" NOTNULL="true" SEQUENCE="false"/>
-        <FIELD NAME="result" TYPE="text" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="questionid" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Foreign key references question.id. Can be made to reference question_codecpp.id Pro/Cons?"/>
+        <FIELD NAME="text" TYPE="text" NOTNULL="true" SEQUENCE="false" COMMENT="Question text for the different variation"/>
+        <FIELD NAME="result" TYPE="text" LENGTH="10" NOTNULL="false" SEQUENCE="false" COMMENT="Output of the variation"/>
+        <FIELD NAME="difficulty" TYPE="float" LENGTH="11" NOTNULL="true" DEFAULT="0.0000" SEQUENCE="false" DECIMALS="4" COMMENT="Calculated difficulty of the variation"/>
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
-        <KEY NAME="category" TYPE="foreign" FIELDS="category" REFTABLE="question_codecpp" REFFIELDS="id"/>
+        <KEY NAME="questionid" TYPE="foreign" FIELDS="questionid" REFTABLE="question" REFFIELDS="id"/>
       </KEYS>
     </TABLE>
   </TABLES>

@@ -141,7 +141,7 @@ class question_dataset_dependent_definitions_form extends question_wizard_form {
             }
             $mform->addElement('advcheckbox', "editable[{$count}]", "Edit", "", "", array(0, 1));
             $count = $count + 1;
-        }$label = $label . "<p style
+        }
         //$this->qtypeobj->generate_datasets($this->question);
 
         // Temporary strings.
@@ -158,20 +158,21 @@ class question_dataset_dependent_definitions_form extends question_wizard_form {
         $mform->setType('wizard', PARAM_ALPHA);
     }
 
-    public function validation($data, $files) {
-        $errors = parent::validation($data, $files);
-        $datasets = $data['dataset'];
-        $countvalid = 0;
-        foreach ($datasets as $key => $dataset) {
-            if ($dataset != '0') {
-                $countvalid++;
-            }
-        }
-        if (!$countvalid) {
-            foreach ($datasets as $key => $dataset) {
-                $errors['dataset['.$key.']'] = "OSAIJDOIASJD";
-            }
-        }
-        return $errors;
-    }
+    // TODO VVV
+//    public function validation($data, $files) {
+//        $errors = parent::validation($data, $files);
+//        $datasets = $data['dataset'];
+//        $countvalid = 0;
+//        foreach ($datasets as $key => $dataset) {
+//            if ($dataset != '0') {
+//                $countvalid++;
+//            }
+//        }
+//        if (!$countvalid) {
+//            foreach ($datasets as $key => $dataset) {
+//                $errors['dataset['.$key.']'] = "OSAIJDOIASJD";
+//            }
+//        }
+//        return $errors;
+//    }
 }

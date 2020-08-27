@@ -35,31 +35,37 @@ require_once($CFG->libdir . '/questionlib.php');
  * @copyright  1999 onwards Martin Dougiamas  {@link http://moodle.com}
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class qtype_codecpp extends question_type {
+class qtype_codecpp extends question_type
+{
 
     public $wizardpagesnumber = 2;
 //    public $service_url = "http://10.1.20.10:5000";
     public $service_url = "http://0.0.0.0:5000";
+
 //    public $service_url = "ec2-34-207-163-41.compute-1.amazonaws.com/get_key_locations";
 
-    public function finished_edit_wizard($form) {
+    public function finished_edit_wizard($form)
+    {
         return isset($form->savechanges);
     }
-    public function wizardpagesnumber() {
+
+    public function wizardpagesnumber()
+    {
         return 2;
     }
 
     // This gets called by editquestion.php after the standard question is saved.
-    public function print_next_wizard_page($question, $form, $course) {
+    public function print_next_wizard_page($question, $form, $course)
+    {
         global $CFG, $SESSION, $COURSE;
 
         // Catch invalid navigation & reloads.
         if (empty($question->id) && empty($SESSION->codecpp)) {
-            redirect('edit.php?courseid='.$COURSE->id, 'The page you are loading has expired.', 3);
+            redirect('edit.php?courseid=' . $COURSE->id, 'The page you are loading has expired.', 3);
         }
 
         // See where we're coming from.
-        switch($form->wizardpage) {
+        switch ($form->wizardpage) {
             case 'question':
             case 'datasetdefinitions':
                 require("{$CFG->dirroot}/question/type/codecpp/datasetdefinitions.php");
@@ -71,24 +77,25 @@ class qtype_codecpp extends question_type {
     }
 
     // This gets called by question2.php after the standard question is saved.
-    public function &next_wizard_form($submiturl, $question, $wizardnow) {
+    public function &next_wizard_form($submiturl, $question, $wizardnow)
+    {
         global $CFG, $SESSION, $COURSE;
 
         // Catch invalid navigation & reloads.
         if (empty($question->id) && empty($SESSION->codecpp)) {
             redirect('edit.php?courseid=' . $COURSE->id,
-                    'The page you are loading has expired. Cannot get next wizard form.', 3);
+                'The page you are loading has expired. Cannot get next wizard form.', 3);
         }
         if (empty($question->id)) {
             $question = $SESSION->codecpp->questionform;
         }
 
         // See where we're coming from.
-        switch($wizardnow) {
+        switch ($wizardnow) {
             case 'datasetdefinitions':
                 require("{$CFG->dirroot}/question/type/codecpp/datasetdefinitions_form.php");
                 $mform = new question_dataset_dependent_definitions_form(
-                        "{$submiturl}?wizardnow=datasetdefinitions", $question);
+                    "{$submiturl}?wizardnow=datasetdefinitions", $question);
                 break;
             default:
                 //print_error('invalidwizardpage', 'question');
@@ -106,7 +113,8 @@ class qtype_codecpp extends question_type {
      * @param object $question
      * @param string $wizardnow is '' for first page.
      */
-    public function display_question_editing_page($mform, $question, $wizardnow) {
+    public function display_question_editing_page($mform, $question, $wizardnow)
+    {
         global $OUTPUT;
         switch ($wizardnow) {
             case '':
@@ -123,15 +131,14 @@ class qtype_codecpp extends question_type {
         $mform->display();
     }
 
-    public function save_question($question, $form) {
-        global $DB;
-
+    public function save_question($question, $form)
+    {
         if ($this->wizardpagesnumber() == 1 || $question->qtype == 'calculatedsimple') {
             $question = parent::save_question($question, $form);
             return $question;
         }
 
-        $wizardnow =  optional_param('wizardnow', '', PARAM_ALPHA);
+        $wizardnow = optional_param('wizardnow', '', PARAM_ALPHA);
         $id = optional_param('id', 0, PARAM_INT); // Question id.
         // In case 'question':
         // For a new question $form->id is empty
@@ -142,7 +149,7 @@ class qtype_codecpp extends question_type {
         // return a valid question object.
 
         // See where we're coming from.
-        switch($wizardnow) {
+        switch ($wizardnow) {
             case '' :
             case 'question': // Coming from the first page, creating the second.
                 if (empty($form->id)) { // or a new question $form->id is empty.
@@ -152,17 +159,17 @@ class qtype_codecpp extends question_type {
                     //$form->id = $question->id;
                     //$this->save_dataset_definitions($form);
                     //if (isset($form->synchronize) && $form->synchronize == 2) {
-                        //$this->addnamecategory($question);
+                    //$this->addnamecategory($question);
                     //}
                 } else if (!empty($form->makecopy)) {
-                    $questionfromid =  $form->id;
+                    $questionfromid = $form->id;
                     $question = parent::save_question($question, $form);
                     // Prepare the datasets.
                     //$this->preparedatasets($form, $questionfromid);
                     $form->id = $question->id;
                     //$this->save_as_new_dataset_definitions($form, $questionfromid);
                     //if (isset($form->synchronize) && $form->synchronize == 2) {
-                        //$this->addnamecategory($question);
+                    //$this->addnamecategory($question);
                     //}
                 } else {
                     // Editing a question.
@@ -172,7 +179,7 @@ class qtype_codecpp extends question_type {
                     //$form->id = $question->id;
                     //$this->save_dataset_definitions($form);
                     //if (isset($form->synchronize) && $form->synchronize == 2) {
-                        //$this->addnamecategory($question);
+                    //$this->addnamecategory($question);
                     //}
                 }
                 break;
@@ -188,9 +195,9 @@ class qtype_codecpp extends question_type {
                 }
                 $this->generate_datasets($form, $question);
                 //$DB->set_field('question_calculated_options', 'synchronize', $optionssynchronize,
-                        //array('question' => $question->id));
+                //array('question' => $question->id));
                 //if (isset($form->synchronize) && $form->synchronize == 2) {
-                    //$this->addnamecategory($question);
+                //$this->addnamecategory($question);
                 //}
 
                 //$this->save_dataset_definitions($form);
@@ -202,38 +209,36 @@ class qtype_codecpp extends question_type {
         return $question;
     }
 
-    public function generate_datasets($form, $question){
+    public function generate_datasets($form, $question)
+    {
         global $DB, $CFG;
         $possibledatasets = $this->find_editable($question->questiontext);
         $editable = "";
-        for ($i=1; $i<=count($form->editable); $i++){
+        for ($i = 1; $i <= count($form->editable); $i++) {
             $temp = array();
-            if ($form->editable[$i] == 0){
-              $temp[] = "X";
-            }
-            else if (rtrim($possibledatasets[$i-1][5]) == "integer"){
-                if ($form->min[$i] != null){
+            if ($form->editable[$i] == 0) {
+                $temp[] = "X";
+            } else if (rtrim($possibledatasets[$i - 1][5]) == "integer") {
+                if ($form->min[$i] != null) {
                     $from = $form->min[$i];
                     $to = $form->max[$i];
                     $excluded = explode(",", $form->exclude[$i]);
                     $invalid_values = array();
-                    for ($j=0; $j<count($excluded); $j++){
+                    for ($j = 0; $j < count($excluded); $j++) {
                         $invalid_values[] = (int)$excluded[$j];
                     }
-                    for ($j=$from; $j<=$to; $j++){
+                    for ($j = $from; $j <= $to; $j++) {
                         if (($form->exclude[$i] != null) && (in_array($j, $invalid_values, true)))
                             continue;
                         $temp[] = $j;
                     }
-                }
-                else{
+                } else {
                     $exact_values = explode(",", $form->exact[$i]);
-                    for ($j=0; $j<count($exact_values); $j++){
+                    for ($j = 0; $j < count($exact_values); $j++) {
                         $temp[] = (int)$exact_values[$j];
                     }
                 }
-            }
-            else if (rtrim($possibledatasets[$i-1][5]) == "binary_op"){
+            } else if (rtrim($possibledatasets[$i - 1][5]) == "binary_op") {
                 $temp[] = (string)$form->multiplication[$i];
                 $temp[] = (string)$form->addition[$i];
                 $temp[] = (string)$form->substraction[$i];
@@ -245,30 +250,28 @@ class qtype_codecpp extends question_type {
                 $temp[] = (string)$form->bigger[$i];
                 $temp[] = (string)$form->equalsequals[$i];
                 $temp[] = (string)$form->notequals[$i];
-            }
-            else if (rtrim($possibledatasets[$i-1][5]) == "logical"){
+            } else if (rtrim($possibledatasets[$i - 1][5]) == "logical") {
                 $temp[] = (string)$form->andoperator[$i];
                 $temp[] = (string)$form->oroperator[$i];
-            }
-            else if (rtrim($possibledatasets[$i-1][5]) == "text"){
+            } else if (rtrim($possibledatasets[$i - 1][5]) == "text") {
                 $temp[] = (string)$form->lowercase[$i];
                 $temp[] = (string)$form->uppercase[$i];
                 $temp[] = (string)$form->digits[$i];
-            }
-            else if (rtrim($possibledatasets[$i-1][5]) == "float"){
+            } else if (rtrim($possibledatasets[$i - 1][5]) == "float") {
                 $temp[] = (string)$form->minfloat[$i];
                 $temp[] = (string)$form->maxfloat[$i];
             }
             $editable .= join(";", $temp);
             $editable .= "\n";
         }
+
         $call_data = array(
-            "source_code" => $this->strip_html($question->questiontext),
+            "source_code" => html_to_text($question->questiontext),
             "edit" => $editable
         );
         $callresult = $this->callAPI("POST", $this->service_url . "/codeprocessor", json_encode($call_data));
         $callresult = json_decode($callresult, true);
-        for ($i=0; $i<count($callresult); $i++){
+        for ($i = 0; $i < count($callresult); $i++) {
             $question_text = $callresult[$i]['new_source_code'];
             $question_result = $callresult[$i]['output'];
             $new_question = new stdClass();
@@ -277,14 +280,15 @@ class qtype_codecpp extends question_type {
             $new_question->questiontext = $question_text;
             $new_question->result = $question_result;
 
-            $DB->insert_record('dataset_codecpp', $new_question);
+            $DB->insert_record('question_codecpp_dataset', $new_question);
         }
     }
 
-    public function callAPI($method, $url, $data){
+    public function callAPI($method, $url, $data)
+    {
         $curl = curl_init();
 
-        switch ($method){
+        switch ($method) {
             case "POST":
                 curl_setopt($curl, CURLOPT_POST, 1);
                 if ($data)
@@ -312,21 +316,22 @@ class qtype_codecpp extends question_type {
 
         // EXECUTE:
         $result = curl_exec($curl);
-        if(!$result){die("Connection Failure");}
+        if (!$result) {
+            die("Connection Failure");
+        }
         curl_close($curl);
         return $result;
     }
 
-    public function save_question_options($question) {
+    public function save_question_options($question)
+    {
         global $DB, $CFG;
         $result = new stdClass();
         $context = $question->context;
-        $cleaned_questiontext = htmlspecialchars_decode($question->questiontext);
-        $cleaned_questiontext = str_replace("</p>", "\n", $cleaned_questiontext);
-        $cleaned_questiontext = str_replace("<p>", "", $cleaned_questiontext);
+        $cleaned_questiontext = html_to_text($question->questiontext);
         // Fetch old answer ids so that we can reuse them.
         $oldanswers = $DB->get_records('question_answers',
-                array('question' => $question->id), 'id ASC');
+            array('question' => $question->id), 'id ASC');
 
         // Save the true answer - update an existing answer if possible.
         $answer = array_shift($oldanswers);
@@ -355,12 +360,12 @@ class qtype_codecpp extends question_type {
         if ($options = $DB->get_record('question_codecpp', array('question' => $question->id))) {
             // No need to do anything, since the answer IDs won't have changed
             // But we'll do it anyway, just for robustness.
-            $options->trueanswer  = $trueid;
+            $options->trueanswer = $trueid;
             $DB->update_record('question_codecpp', $options);
         } else {
             $options = new stdClass();
-            $options->question    = $question->id;
-            $options->trueanswer  = $trueid;
+            $options->question = $question->id;
+            $options->trueanswer = $trueid;
             $DB->insert_record('question_codecpp', $options);
         }
 
@@ -373,114 +378,102 @@ class qtype_codecpp extends question_type {
      * Loads the question type specific options for the question.
      */
 
-    public function get_question_substring($question, $from, $to){
-        global $CFG;
-        $cleaned_questiontext = $this->strip_html($question->questiontext);
+    public function get_question_substring($question, $from, $to)
+    {
+        $cleaned_questiontext = html_to_text($question->questiontext);
         $lines = explode("\n", $cleaned_questiontext);
         $result = array();
-        for ($i=$from-1; $i<=$to-1; $i++){
+        for ($i = $from - 1; $i <= $to - 1; $i++) {
             $result[] = $lines[$i];
         }
         return $result;
     }
 
-    private function strip_html($question_text){
-        $decoded = htmlspecialchars_decode($question_text);
-        $tmp = preg_replace('/(\s*\#include\s+)(["<])([^">]+)([">])/m', '\\1---\\3---', $decoded);
-        $tmp = preg_replace('/<br ?\/?>/m', "\n", $tmp);
-        $stripped = strip_tags($tmp);
-        $tmp = preg_replace('/(\s*\#include\s+)(---)([^">\n]+)(---)/m', '\\1<\\3>', $stripped);
-        $tmp = strtr($tmp, array_flip(get_html_translation_table(HTML_ENTITIES, ENT_QUOTES)));
-//        return explode('!!!', $tmp);
-        return $tmp;
-    }
-
-    public function find_editable($question_text){
+    public function find_editable($question_text)
+    {
         global $CFG;
         $call_data = array(
-            "source_code" => $this->strip_html($question_text)
+            "source_code" => html_to_text($question_text)
         );
         $callresult = $this->callAPI("POST", $this->service_url . "/get_key_locations", json_encode($call_data));
-
         $callresult = json_decode($callresult, true);
         $result_data = array();
-        for ($i=0; $i<count($callresult['result']['key_locations']); $i++){
+        for ($i = 0; $i < count($callresult['result']['key_locations']); $i++) {
             $result_data[] = explode(";", $callresult['result']['key_locations'][$i]);
         }
         return $result_data;
     }
-    public function get_question_options($question) {
+
+    public function get_question_options($question)
+    {
         global $DB, $OUTPUT;
         // Get additional information from database
         // and attach it to the question object.
         if (!$question->options = $DB->get_record('question_codecpp',
-                array('question' => $question->id))) {
+            array('question' => $question->id))) {
             echo $OUTPUT->notification('Error: Missing question options!');
             return false;
         }
         // Load the answers.
         if (!$question->options->answers = $DB->get_records('question_answers',
-                array('question' =>  $question->id), 'id ASC')) {
+            array('question' => $question->id), 'id ASC')) {
             echo $OUTPUT->notification('Error: Missing question answers for CodeCPP question ' .
-                    $question->id . '!');
+                $question->id . '!');
             return false;
         }
 
         return true;
     }
 
-    protected function initialise_question_instance(question_definition $question, $questiondata) {
+    protected function initialise_question_instance(question_definition $question, $questiondata)
+    {
         global $DB;
         parent::initialise_question_instance($question, $questiondata);
         $range_sql = "SELECT 
                         MIN(a.id) as min_id,
                         MAX(a.id) as max_id
-                        FROM {dataset_codecpp} a
+                        FROM {question_codecpp_dataset} a
                         WHERE a.category = :questionid";
         $range = $DB->get_record_sql($range_sql, array('questionid' => $question->id));
         $num = rand($range->min_id, $range->max_id);
 
-        $dataset_sql = "SELECT *
-                        FROM {dataset_codecpp} qcpp
-                        WHERE qcpp.category = :questionid";
-        $dataset = $DB->get_records_sql($dataset_sql, array('questionid' => $question->id));
-
-        // TODO VVV
-        $res = $DB->get_record("dataset_codecpp", array('id' => $num));
-        $question->dataset = $dataset;
-        $question->trueanswerid =  $questiondata->options->trueanswer;
+        $question->variation = $DB->get_record("question_codecpp_dataset", array('id' => $num));
+        $question->trueanswerid = $questiondata->options->trueanswer;
     }
 
-    public function delete_question($questionid, $contextid) {
+    public function delete_question($questionid, $contextid)
+    {
         global $DB;
-        $DB->delete_records('dataset_codecpp', array('category' => $questionid));
+        $DB->delete_records('question_codecpp_dataset', array('category' => $questionid));
         $DB->delete_records('question_codecpp', array('question' => $questionid));
         parent::delete_question($questionid, $contextid);
     }
 
-    public function move_files($questionid, $oldcontextid, $newcontextid) {
+    public function move_files($questionid, $oldcontextid, $newcontextid)
+    {
         parent::move_files($questionid, $oldcontextid, $newcontextid);
         $this->move_files_in_answers($questionid, $oldcontextid, $newcontextid);
     }
 
-    protected function delete_files($questionid, $contextid) {
+    protected function delete_files($questionid, $contextid)
+    {
         parent::delete_files($questionid, $contextid);
         $this->delete_files_in_answers($questionid, $contextid);
     }
 
-    public function get_random_guess_score($questiondata) {
+    public function get_random_guess_score($questiondata)
+    {
         return 0.5;
     }
 
-    public function get_possible_responses($questiondata) {
+    public function get_possible_responses($questiondata)
+    {
         return array(
             $questiondata->id => array(
                 0 => new question_possible_response(get_string('false', 'qtype_codecpp'),
-                        $questiondata->options->answers[
-                        $questiondata->options->falseanswer]->fraction),
+                    $questiondata->options->answers[$questiondata->options->falseanswer]->fraction),
                 1 => new question_possible_response(get_string('true', 'qtype_codecpp'),
-                        $questiondata->options->answers[
-                        $questiondata->options->trueanswer]->fraction),
+                    $questiondata->options->answers[$questiondata->options->trueanswer]->fraction),
                 null => question_possible_response::no_response()
             )
         );

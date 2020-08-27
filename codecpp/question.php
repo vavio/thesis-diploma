@@ -45,12 +45,12 @@ class qtype_codecpp_question extends question_graded_automatically {
     public $questionanswer;
     public $dataset;
     public $index;
+    public $variation;
 
     public function start_attempt(question_attempt_step $step, $variant) {
-        $num = rand(0, count($this->dataset)-1);
-        $step->set_qt_var('_qtext_', htmlspecialchars($this->dataset[$num]->questiontext, ENT_NOQUOTES));
-        $step->set_qt_var('_qans_', $this->dataset[$num]->result);
-        $step->set_qt_var('_num_', $num);
+        $step->set_qt_var('_qtext_', $this->variation->questiontext);
+        $step->set_qt_var('_qans_', $this->variation->result);
+        $step->set_qt_var('_num_', $this->variation->id);
     }
 
     public function apply_attempt_state(question_attempt_step $step){
@@ -161,7 +161,7 @@ class qtype_codecpp_question_loader {
         global $DB;
         $new_question = $this->$question;
         $sql = "SELECT a.id
-                  FROM {dataset_codecpp} a
+                  FROM {question_codecpp_dataset} a
                  WHERE a.category = ?";
         $temp = $DB->get_records_sql($sql, array($this->question->id));
         $minn = INF;
@@ -173,7 +173,7 @@ class qtype_codecpp_question_loader {
                 $maxx = $t->id;
         }
         $num = rand($minn, $maxx);
-        $res = $DB->get_record("dataset_codecpp", array('id' => $num));
+        $res = $DB->get_record("question_codecpp_dataset", array('id' => $num));
         $new_question = array();
         $new_question[] = $res->questiontext;
         $new_question[] = $res->result;
