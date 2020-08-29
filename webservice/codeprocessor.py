@@ -350,7 +350,11 @@ def generate_variation(code, edit):
         new_source_code = construct_code(code, key_loc, new_variation)
         new_cp = CodeProcessor(new_source_code)
         if new_source_code not in output:
-            output[new_source_code] = new_cp.get_output()
+            code_output = new_cp.get_output()
+            if len(code_output) == 0:
+                continue
+
+            output[new_source_code] = code_output
             return_list.append((new_cp.get_complexity(), new_source_code, output[new_source_code]))
             print(new_source_code)
     return_list.sort()

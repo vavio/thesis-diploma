@@ -272,13 +272,12 @@ class qtype_codecpp extends question_type
         $callresult = $this->callAPI("POST", $this->service_url . "/codeprocessor", json_encode($call_data));
         $callresult = json_decode($callresult, true);
         for ($i = 0; $i < count($callresult); $i++) {
-            $question_text = $callresult[$i]['new_source_code'];
-            $question_result = $callresult[$i]['output'];
             $new_question = new stdClass();
-            $new_question->id = $i;
-            $new_question->category = $question->id;
-            $new_question->questiontext = $question_text;
-            $new_question->result = $question_result;
+//            $new_question->id = $i;
+            $new_question->questionid = $question->id;
+            $new_question->text = $callresult[$i]['new_source_code'];
+            $new_question->result = $callresult[$i]['output'];
+            $new_question->difficulty = $callresult[$i]['difficulty'];
 
             $DB->insert_record('question_codecpp_dataset', $new_question);
         }
@@ -307,7 +306,6 @@ class qtype_codecpp extends question_type
         // OPTIONS:
         curl_setopt($curl, CURLOPT_URL, $url);
         curl_setopt($curl, CURLOPT_HTTPHEADER, array(
-            'APIKEY: 111111111111111111111',
             'Content-Type: application/json',
         ));
         curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
@@ -328,7 +326,6 @@ class qtype_codecpp extends question_type
         global $DB, $CFG;
         $result = new stdClass();
         $context = $question->context;
-        $cleaned_questiontext = html_to_text($question->questiontext);
         // Fetch old answer ids so that we can reuse them.
         $oldanswers = $DB->get_records('question_answers',
             array('question' => $question->id), 'id ASC');
@@ -337,17 +334,16 @@ class qtype_codecpp extends question_type
         $answer = array_shift($oldanswers);
         if (!$answer) {
             $answer = new stdClass();
-            $answer->question = $question->id;
+            $answer->questionid = $question->id;
             $answer->answer = '';
             $answer->feedback = '';
             $answer->id = $DB->insert_record('question_answers', $answer);
         }
 
-        $shell_output = 'no_output';
-        $answer->answer = (string)$shell_output;
+        $answer->answer = 'variable_output_per_codecpp_question';
         $answer->fraction = 1;
+        $answer->question = $question->id;
         $DB->update_record('question_answers', $answer);
-        $trueid = $answer->id;
 
         // Delete any left over old answer records.
         $fs = get_file_storage();
@@ -357,15 +353,13 @@ class qtype_codecpp extends question_type
         }
 
         // Save question options in question_codecpp table.
-        if ($options = $DB->get_record('question_codecpp', array('question' => $question->id))) {
+        if ($options = $DB->get_record('question_codecpp', array('questionid' => $question->id))) {
             // No need to do anything, since the answer IDs won't have changed
             // But we'll do it anyway, just for robustness.
-            $options->trueanswer = $trueid;
             $DB->update_record('question_codecpp', $options);
         } else {
             $options = new stdClass();
-            $options->question = $question->id;
-            $options->trueanswer = $trueid;
+            $options->questionid = $question->id;
             $DB->insert_record('question_codecpp', $options);
         }
 
@@ -410,7 +404,7 @@ class qtype_codecpp extends question_type
         // Get additional information from database
         // and attach it to the question object.
         if (!$question->options = $DB->get_record('question_codecpp',
-            array('question' => $question->id))) {
+            array('questionid' => $question->id))) {
             echo $OUTPUT->notification('Error: Missing question options!');
             return false;
         }
@@ -427,24 +421,25 @@ class qtype_codecpp extends question_type
 
     protected function initialise_question_instance(question_definition $question, $questiondata)
     {
-        global $DB;
         parent::initialise_question_instance($question, $questiondata);
-        $range_sql = "SELECT 
-                        MIN(a.id) as min_id,
-                        MAX(a.id) as max_id
-                        FROM {question_codecpp_dataset} a
-                        WHERE a.category = :questionid";
-        $range = $DB->get_record_sql($range_sql, array('questionid' => $question->id));
-        $num = rand($range->min_id, $range->max_id);
+        global $DB;
 
-        $question->variation = $DB->get_record("question_codecpp_dataset", array('id' => $num));
-        $question->trueanswerid = $questiondata->options->trueanswer;
+        $range_sql = "SELECT a.id as id,
+                        a.text as variation_text,
+                        a.result as variation_result,
+                        a.difficulty as variation_difficulty
+                        FROM {question_codecpp_dataset} a
+                        WHERE a.questionid = :questionid";
+
+        $codecpp_records = $DB->get_records_sql($range_sql, array('questionid' => $question->id));
+
+        $question->questionloader = new qtype_codecpp_question_loader($codecpp_records);
     }
 
     public function delete_question($questionid, $contextid)
     {
         global $DB;
-        $DB->delete_records('question_codecpp_dataset', array('category' => $questionid));
+        $DB->delete_records('question_codecpp_dataset', array('questionid' => $questionid));
         $DB->delete_records('question_codecpp', array('question' => $questionid));
         parent::delete_question($questionid, $contextid);
     }
@@ -463,7 +458,7 @@ class qtype_codecpp extends question_type
 
     public function get_random_guess_score($questiondata)
     {
-        return 0.5;
+        return 0;
     }
 
     public function get_possible_responses($questiondata)

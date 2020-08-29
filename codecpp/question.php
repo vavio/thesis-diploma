@@ -35,30 +35,32 @@ require_once($CFG->dirroot . '/question/type/questionbase.php');
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class qtype_codecpp_question extends question_graded_automatically {
-    public $rightanswer;
-    public $truefeedback;
-    public $falsefeedback;
-    public $trueanswerid;
-    public $falseanswerid;
-    public $questionsloader;
-    public $questiondata;
-    public $questionanswer;
-    public $dataset;
-    public $index;
-    public $variation;
+    /** @var qtype_codecpp_question_loader helper for loading the variation of the codecpp question. */
+    public $questionloader;
+
+    /** @var string variation id of codecpp question. */
+    public $variation_id;
+    /** @var string variation text of codecpp question. */
+    public $variation_text;
+    /** @var string variation result of codecpp question. */
+    public $variation_result;
 
     public function start_attempt(question_attempt_step $step, $variant) {
-        $step->set_qt_var('_qtext_', $this->variation->questiontext);
-        $step->set_qt_var('_qans_', $this->variation->result);
-        $step->set_qt_var('_num_', $this->variation->id);
+        $codecppquestion = $this->questionloader->load_question();
+
+        $step->set_qt_var('_qid_', $codecppquestion->id);
+        $step->set_qt_var('_qtext_', $codecppquestion->variation_text);
+        $step->set_qt_var('_qans_', $codecppquestion->variation_result);
+
+        parent::start_attempt($step, $variant);
     }
 
-    public function apply_attempt_state(question_attempt_step $step){
-        $this->index = $step->get_qt_var('_num_');
-    }
+    public function apply_attempt_state(question_attempt_step $step) {
+        $this->variation_id = $step->get_qt_var('_qid_');
+        $this->variation_text = $step->get_qt_var('_qtext_');
+        $this->variation_result = $step->get_qt_var('_qans_');
 
-    public function get_index(){
-        return array('answer' => $this->index);
+        parent::apply_attempt_state($step);
     }
 
     public function get_expected_data() {
@@ -66,7 +68,7 @@ class qtype_codecpp_question extends question_graded_automatically {
     }
 
     public function get_correct_response() {
-        return array('answer' => $this->rightanswer);
+        return array('answer' => $this->variation_result);
     }
 
     public function summarise_response(array $response) {
@@ -86,7 +88,7 @@ class qtype_codecpp_question extends question_graded_automatically {
     }
 
     public function get_correct_answer() {
-        return $this->questionanswer;
+        return $this->variation_result;
     }
 
     public function is_complete_response(array $response) {
@@ -106,8 +108,8 @@ class qtype_codecpp_question extends question_graded_automatically {
     }
 
     public function grade_response(array $response) {
-        if (($response['answer'] == $this->dataset[$this->index]->result)
-            || (abs(floatval($response['answer']) - floatval($this->dataset[$this->index]->result)) <= 0.01)){
+        if (($response['answer'] == $this->variation_result)
+            || (abs(floatval($response['answer']) - floatval($this->variation_result)) <= 0.01)){
             $fraction = 1;
         }
         else {
@@ -115,70 +117,40 @@ class qtype_codecpp_question extends question_graded_automatically {
         }
         return array($fraction, question_state::graded_state_for_fraction($fraction));
     }
-
-    public function check_file_access($qa, $options, $component, $filearea, $args, $forcedownload) {
-        if ($component == 'question' && $filearea == 'answerfeedback') {
-            $answerid = reset($args); // Itemid is answer id.
-            $response = $qa->get_last_qt_var('answer', '');
-            return $options->feedback && (
-                    ($answerid == $this->trueanswerid && $response) ||
-                    ($answerid == $this->falseanswerid && $response !== ''));
-
-        } else {
-            return parent::check_file_access($qa, $options, $component, $filearea,
-                    $args, $forcedownload);
-        }
-    }
 }
 
+
+/**
+ * This class is responsible for loading the questions that a question needs from the database.
+ *
+ * @copyright  2020 Valentin Ambaroski
+ * @license   http://opensource.org/licenses/mit-license The MIT License
+ */
 class qtype_codecpp_question_loader {
-    protected $question;
-    public $qt;
-    public $ra;
+    /** @var array hold available codecpp variation ids to choose from. */
+    protected $available_variations;
 
     /**
      * Constructor
-     * @param array $availablequestions array of available question ids.
-     * @param int $choose how many questions to load.
+     * @param array $availablequestions array of available variation ids.
      */
-    public function __construct($question) {
-        $this->question = $question;
-    }
-
-    public function get_qt(){
-        return $this->qt;
-    }
-
-    public function get_ra(){
-        return $this->ra;
+    public function __construct($available_variations) {
+        $this->available_variations = $available_variations;
     }
 
     /**
-     * Choose and load the desired number of questions.
+     * Choose and load the desired random variation of codecpp question.
      * @return array of short answer questions.
+     * @throws coding_exception
      */
-    public function load_questions() {
-        global $DB;
-        $new_question = $this->$question;
-        $sql = "SELECT a.id
-                  FROM {question_codecpp_dataset} a
-                 WHERE a.category = ?";
-        $temp = $DB->get_records_sql($sql, array($this->question->id));
-        $minn = INF;
-        $maxx = -1;
-        foreach ($temp as $t){
-            if ($t->id < $minn)
-                $minn = $t->id;
-            if ($t->id > $maxx)
-                $maxx = $t->id;
+    public function load_question() {
+        if (count($this->available_variations) == 0) {
+            throw new coding_exception('notenoughcodecppvariation');
         }
-        $num = rand($minn, $maxx);
-        $res = $DB->get_record("question_codecpp_dataset", array('id' => $num));
-        $new_question = array();
-        $new_question[] = $res->questiontext;
-        $new_question[] = $res->result;
-        $this->qt = $res->questiontext;
-        $this->ra = $res->result;
-        return $new_question;
+
+        $rand_array = draw_rand_array($this->available_variations, 1);
+        $keys = array_keys($rand_array);
+
+        return $rand_array[$keys[0]];
     }
 }
