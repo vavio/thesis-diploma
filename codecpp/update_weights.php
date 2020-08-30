@@ -48,11 +48,11 @@ $table->set_attribute('id', 'codecpp');
 $table->set_attribute('class', 'admintable generaltable');
 $table->setup();
 
-$sql = 'SELECT q.id as quiz_id,
+$quiz_with_codecpp = $DB->get_records_sql('SELECT q.id as quiz_id,
        q.name,
        q.course as course_id,
        c.fullname,
-       c.shortname 
+       c.shortname
        FROM {quiz} q
         LEFT JOIN {quiz_slots} qs ON q.id = qs.quizid
         LEFT JOIN {course} c ON q.course = c.id
@@ -60,9 +60,10 @@ $sql = 'SELECT q.id as quiz_id,
         SELECT qs.id
         FROM {question} qs
         WHERE qs.qtype = \'codecpp\'
-       )';
+       )');
 
-$quiz_with_codecpp = $DB->get_records_sql($sql);
+
+$updated_quizes = $DB->get_records_sql('SELECT quizid FROM {question_codecpp_quizupdate}');
 
 foreach ($quiz_with_codecpp as $quiz) {
     $row = array();
@@ -73,7 +74,11 @@ foreach ($quiz_with_codecpp as $quiz) {
 
     $quizurl = new moodle_url('/mod/quiz/view.php', array('q' => $quiz->quiz_id));
     $row[] = html_writer::link($quizurl, $quiz->name, array('title' => $quiz->name));
-    $row[] = "Update";
+    if (isset($updated_quizes[$quiz->quiz_id])) {
+        $row[] = "Updated on: ";
+    } else {
+        $row[] = "Update";
+    }
 
     $table->add_data($row);
 }
