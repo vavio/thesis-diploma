@@ -463,6 +463,7 @@ class qtype_codecpp extends question_type
 
     public function get_possible_responses($questiondata)
     {
+         //TODO VVV fix
         return array(
             $questiondata->id => array(
                 0 => new question_possible_response(get_string('false', 'qtype_codecpp'),
