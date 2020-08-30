@@ -26,11 +26,11 @@ defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->libdir . '/formslib.php');
 
-$settings = null;
+//$settings = null;
 
 if (is_siteadmin()) {
     $ADMIN->add('qtypesettings', new admin_category('qtype_codecpp_category', get_string('pluginname', 'qtype_codecpp')));
-    $conf = get_config('qtype_codecpp');
+
     $ADMIN->add('qtype_codecpp_category',
         new admin_externalpage(
             'qtype_codecpp_updateweigths',
@@ -38,4 +38,20 @@ if (is_siteadmin()) {
             new moodle_url('/question/type/codecpp/update_weights.php'),
             'moodle/site:config'
         ));
+
+    $conf = get_config('qtype_codecpp');
+    $settingspage = new admin_settingpage('codecppsetting' , get_string('settings'));
+    $ADMIN->add('qtype_codecpp_category', $settingspage);
+
+    $settingspage->add(new admin_setting_configcheckbox('qtype_codecpp/use_http',
+        get_string('use_http', 'qtype_codecpp'),
+        get_string('use_http_text', 'qtype_codecpp'), 1));
+
+    $settingspage->add(new admin_setting_configtext('qtype_codecpp/servicehost',
+        get_string('servicehost', 'qtype_codecpp'),
+        get_string('servicehost_text', 'qtype_codecpp'), '0.0.0.0', PARAM_HOST));
+
+    $settingspage->add(new admin_setting_configtext('qtype_codecpp/serviceport',
+        get_string('serviceport', 'qtype_codecpp'),
+        get_string('serviceport_text', 'qtype_codecpp'), 5000, PARAM_INT));
 }

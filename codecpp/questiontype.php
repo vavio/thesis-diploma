@@ -39,10 +39,6 @@ class qtype_codecpp extends question_type
 {
 
     public $wizardpagesnumber = 2;
-//    public $service_url = "http://10.1.20.10:5000";
-    public $service_url = "http://0.0.0.0:5000";
-
-//    public $service_url = "ec2-34-207-163-41.compute-1.amazonaws.com/get_key_locations";
 
     public function finished_edit_wizard($form)
     {
@@ -52,6 +48,17 @@ class qtype_codecpp extends question_type
     public function wizardpagesnumber()
     {
         return 2;
+    }
+
+    private function get_service_url() {
+        $config = get_config('qtype_codecpp');
+
+        $protocol = 'https';
+        if ($config->use_http) {
+            $protocol = 'http';
+        }
+
+        return sprintf('%s://%s:%d', $protocol, $config->servicehost, $config->serviceport);
     }
 
     // This gets called by editquestion.php after the standard question is saved.
@@ -123,7 +130,9 @@ class qtype_codecpp extends question_type
                 return;
 
             case 'datasetdefinitions':
-                echo $OUTPUT->heading_with_help("Choose Elements", "codecpp_help");
+                echo $OUTPUT->heading_with_help(
+                    get_string('choose_element', 'qtype_codecpp'),
+                    'questiondatasets', 'qtype_codecpp');
                 break;
 
         }
@@ -269,7 +278,7 @@ class qtype_codecpp extends question_type
             "source_code" => html_to_text($question->questiontext),
             "edit" => $editable
         );
-        $callresult = $this->callAPI("POST", $this->service_url . "/codeprocessor", json_encode($call_data));
+        $callresult = $this->callAPI("POST", $this->get_service_url() . "/codeprocessor", json_encode($call_data));
         $callresult = json_decode($callresult, true);
         for ($i = 0; $i < count($callresult); $i++) {
             $new_question = new stdClass();
@@ -389,7 +398,7 @@ class qtype_codecpp extends question_type
         $call_data = array(
             "source_code" => html_to_text($question_text)
         );
-        $callresult = $this->callAPI("POST", $this->service_url . "/get_key_locations", json_encode($call_data));
+        $callresult = $this->callAPI("POST", $this->get_service_url() . "/get_key_locations", json_encode($call_data));
         $callresult = json_decode($callresult, true);
         $result_data = array();
         for ($i = 0; $i < count($callresult['result']['key_locations']); $i++) {
