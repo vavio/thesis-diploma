@@ -50,7 +50,7 @@ class qtype_codecpp extends question_type
         return 2;
     }
 
-    private function get_service_url() {
+    public static function get_service_url() {
         $config = get_config('qtype_codecpp');
 
         $protocol = 'https';
@@ -278,11 +278,10 @@ class qtype_codecpp extends question_type
             "source_code" => html_to_text($question->questiontext),
             "edit" => $editable
         );
-        $callresult = $this->callAPI("POST", $this->get_service_url() . "/codeprocessor", json_encode($call_data));
+        $callresult = $this->callAPI("POST", qtype_codecpp::get_service_url() . "/codeprocessor", json_encode($call_data));
         $callresult = json_decode($callresult, true);
         for ($i = 0; $i < count($callresult); $i++) {
             $new_question = new stdClass();
-//            $new_question->id = $i;
             $new_question->questionid = $question->id;
             $new_question->text = $callresult[$i]['new_source_code'];
             $new_question->result = $callresult[$i]['output'];
@@ -294,6 +293,7 @@ class qtype_codecpp extends question_type
 
     public function callAPI($method, $url, $data)
     {
+        // TODO VVV replace with moodle curl
         $curl = curl_init();
 
         switch ($method) {
@@ -394,11 +394,10 @@ class qtype_codecpp extends question_type
 
     public function find_editable($question_text)
     {
-        global $CFG;
         $call_data = array(
             "source_code" => html_to_text($question_text)
         );
-        $callresult = $this->callAPI("POST", $this->get_service_url() . "/get_key_locations", json_encode($call_data));
+        $callresult = $this->callAPI("POST", qtype_codecpp::get_service_url() . "/get_key_locations", json_encode($call_data));
         $callresult = json_decode($callresult, true);
         $result_data = array();
         for ($i = 0; $i < count($callresult['result']['key_locations']); $i++) {

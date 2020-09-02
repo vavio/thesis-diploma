@@ -25,6 +25,8 @@
  */
 
 require_once('../../../config.php');
+require_once('./questiontype.php');
+require_once('./classes/update_weights_decision_form.php');
 require_once($CFG->libdir . '/tablelib.php');
 require_once($CFG->libdir . '/adminlib.php');
 require_once($CFG->libdir . '/xmlize.php');
@@ -32,9 +34,58 @@ require_once($CFG->libdir . '/questionlib.php');
 
 admin_externalpage_setup('qtype_codecpp_updateweigths');
 
-$thispageurl = new moodle_url('/question/type/codecpp/update_weights.php/');
+$confirm = optional_param('confirm', 0, PARAM_BOOL);
+$quizid = optional_param('quizid', '', PARAM_INT);
+$changes_applied = optional_param('changes_applied', '', PARAM_TEXT);
+$thispageurl = new moodle_url('/question/type/codecpp/update_weights.php');
+
+// Process actions ============================================================
+
+// Accept.
+if ($confirm && confirm_sesskey()) {
+    throw_if_quiz($quizid);
+
+    $updated_record = new stdClass();
+    $updated_record->quizid = $quizid;
+    $updated_record->timecreated = time();
+    $updated_record->changes_applied = ‌‌json_encode(unserialize(base64_decode($changes_applied)));
+
+    // TODO VVV call the service to update the weights
+
+//    $DB->insert_record('question_codecpp_dataset', $new_question); // TODO VVV write to DB
+    $quizname = $DB->get_record('quiz', array('id' => $quizid), 'name')->name;
+    redirect($thispageurl, sprintf(get_string('weights_updated_success', 'qtype_codecpp'), $quizname));
+}
 
 echo $OUTPUT->header();
+echo $OUTPUT->heading(get_string('update_weights', 'qtype_codecpp'));
+echo $OUTPUT->box_start('generalbox', 'notice');
+
+// There is no need to handle Decline action since we just show the normal page
+
+// Update weights.
+if ($quizid && confirm_sesskey()) {
+    throw_if_quiz($quizid);
+    // TODO VVV retrieve data
+    $data = array();
+    $c = new curl();
+    $result = $c->post(qtype_codecpp::get_service_url() . '/update_weights');
+
+    if ($c->get_errno()) {
+        throw new moodle_exception('errupdateweights', 'qtype_codecpp', '',
+            array('url' => qtype_codecpp::get_service_url(), 'result' => $result), json_encode($data));
+    }
+
+    $result = json_decode($result)->weights;
+
+    $mform = new update_weights_decision_form($result,null, ['returnurl' => $thispageurl, 'quizid' => $quizid]);
+
+    $mform->display();
+    echo $OUTPUT->box_end();
+    echo $OUTPUT->footer();
+
+    return;
+}
 
 $table = new flexible_table('qtype_codecpp_adjust_weights');
 $table->define_baseurl($thispageurl);
@@ -75,9 +126,13 @@ foreach ($quiz_with_codecpp as $quiz) {
     $quizurl = new moodle_url('/mod/quiz/view.php', array('q' => $quiz->quiz_id));
     $row[] = html_writer::link($quizurl, $quiz->name, array('title' => $quiz->name));
     if (isset($updated_quizes[$quiz->quiz_id])) {
-        $row[] = "Updated on: ";
+        $row[] = userdate(DATE_ATOM, $updated_quizes[$quiz->quiz_id]);
     } else {
-        $row[] = "Update";
+        $row[] = html_writer::link(
+            new moodle_url($thispageurl, array('quizid' => $quiz->quiz_id, 'sesskey' => sesskey())),
+            get_string('update_button', 'qtype_codecpp'),
+            array('title' => get_string('update_button', 'qtype_codecpp'), 'class' => 'btn btn-primary')
+        );
     }
 
     $table->add_data($row);
@@ -85,4 +140,17 @@ foreach ($quiz_with_codecpp as $quiz) {
 
 $table->finish_output();
 
+echo $OUTPUT->box_end();
 echo $OUTPUT->footer();
+
+function throw_if_quiz($quizid) {
+    global $DB;
+
+    if (!$DB->record_exists('quiz', array('id' => $quizid))) {
+        throw new moodle_exception('errquizdoesntexists', 'qtype_codecpp', '', null, $quizid);
+    }
+
+    if ($DB->record_exists('question_codecpp_quizupdate', array('id' => $quizid))) {
+        throw new moodle_exception('errquizalreadyupdated', 'qtype_codecpp', '', null, $quizid);
+    }
+}

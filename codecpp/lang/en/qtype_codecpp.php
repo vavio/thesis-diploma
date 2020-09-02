@@ -44,6 +44,14 @@ $string['update_weights'] = 'CodeCPP update weights';
 $string['course_name'] = 'Course Name';
 $string['quiz_name'] = 'Quiz Name with CodeCPP questions';
 $string['last_updated'] = 'Update/Last updated';
+$string['update_button'] = 'Update';
+$string['operation'] = 'Operation';
+$string['old_value'] = 'Old value';
+$string['new_value'] = 'Old value';
+$string['new_values'] = 'New values';
+$string['same_values'] = 'Same values';
+$string['accept_changes'] = 'Accept changes';
+$string['weights_updated_success'] = 'Successfully updated weights for %s';
 
 $string['use_http'] = 'Use HTTP';
 $string['use_http_text'] = 'When communicating with the service, should HTTP be used instead of HTTPS';

@@ -16,8 +16,27 @@ def gkl():
     return jsonify({'result': temp}), 201
 
 
+@app.route('/update_weights', methods=['POST'])
+def update_weights():
+    values = {
+        'MODULO': {'old_value': 4, 'new_value': 4.1},
+        'ADD': {'old_value': 2, 'new_value': 2},
+        'SUBTRACT': {'old_value': 4, 'new_value': 4},
+        'MULTIPLY': {'old_value': 10, 'new_value': 10},
+        'DIVIDE': {'old_value': 10, 'new_value': 10},
+        'FOR_STATEMENT': {'old_value': 2, 'new_value': 2},
+        'WHILE_STATEMENT': {'old_value': 2, 'new_value': 2},
+        'DO_STATEMENT': {'old_value': 2, 'new_value': 2},
+        'IF_STATEMENT': {'old_value': 2, 'new_value': 2},
+        'COMPARISON_OPERATORS': {'old_value': 1, 'new_value': 1},
+        'INCREMENT': {'old_value': 1, 'new_value': 1},
+        'LOGICAL_OPERATORS': {'old_value': 1, 'new_value': 1}
+    }
+    return jsonify({'weights': values}), 201
+
+
 @app.route('/codeprocessor', methods=['POST'])
-def cp():
+def codeprocessor():
     edit = request.json['edit']
     formatted_edit = list()
     for line in edit.split('\n'):
