@@ -19,9 +19,9 @@ def get_quizes():
         'FROM mdl_quiz mq '
         'LEFT JOIN mdl_quiz_slots mqs ON mq.id = mqs.quizid '
         'WHERE mqs.questionid IN ('
-        'SELECT id '
-        'FROM mdl_question mq '
-        'WHERE mq.qtype = \'codecpp\''
+        ' SELECT id '
+        ' FROM mdl_question mq '
+        ' WHERE mq.qtype = \'codecpp\''
         ')'
     )
     results = dbcursor.fetchall()
@@ -119,8 +119,8 @@ attempt_ids = get_attemps(quiz_ids[0]['quiz_id'])
 print(attempt_ids)
 
 # attempt_steps = get_attemp_step_data(attempt_ids[0]['attempt'])
-attempt_steps = get_attemp_step_data(17)
-print(attempt_steps)
+attempt_steps = get_attemp_step_data(3)
+for att in attempt_steps: print(att)
 
 question_times = calculate_time(attempt_steps)
 print(question_times)

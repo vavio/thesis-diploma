@@ -77,6 +77,6 @@ class update_weights_decision_form extends moodleform
         $name = 'name.' . $key;
         $mform->addElement('static', $name, $key);
         $mform->setType( $name, PARAM_RAW);
-        $mform->setDefault($name, sprintf('%.3f => %.3f', $old_value, $new_value));
+        $mform->setDefault($name, sprintf('%.3f → %.3f', $old_value, $new_value));
     }
 }

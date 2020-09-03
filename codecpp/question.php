@@ -44,6 +44,8 @@ class qtype_codecpp_question extends question_graded_automatically {
     public $variation_text;
     /** @var string variation result of codecpp question. */
     public $variation_result;
+    /** @var string variation difficulty of codecpp question. */
+    public $variation_difficulty;
 
     public function start_attempt(question_attempt_step $step, $variant) {
         $codecppquestion = $this->questionloader->load_question();
@@ -51,6 +53,7 @@ class qtype_codecpp_question extends question_graded_automatically {
         $step->set_qt_var('_qid_', $codecppquestion->id);
         $step->set_qt_var('_qtext_', $codecppquestion->variation_text);
         $step->set_qt_var('_qans_', $codecppquestion->variation_result);
+        $step->set_qt_var('_qdiffc_', $codecppquestion->variation_difficulty);
 
         parent::start_attempt($step, $variant);
     }
@@ -59,6 +62,7 @@ class qtype_codecpp_question extends question_graded_automatically {
         $this->variation_id = $step->get_qt_var('_qid_');
         $this->variation_text = $step->get_qt_var('_qtext_');
         $this->variation_result = $step->get_qt_var('_qans_');
+        $this->variation_difficulty = $step->get_qt_var('_qdiffc_');
 
         parent::apply_attempt_state($step);
     }

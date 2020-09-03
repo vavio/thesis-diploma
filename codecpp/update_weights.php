@@ -66,16 +66,81 @@ echo $OUTPUT->box_start('generalbox', 'notice');
 // Update weights.
 if ($quizid && confirm_sesskey()) {
     throw_if_quiz($quizid);
-    // TODO VVV retrieve data
-    $data = array();
-    $c = new curl();
-    $result = $c->post(qtype_codecpp::get_service_url() . '/update_weights');
 
-    if ($c->get_errno()) {
-        throw new moodle_exception('errupdateweights', 'qtype_codecpp', '',
-            array('url' => qtype_codecpp::get_service_url(), 'result' => $result), json_encode($data));
+    $all_attempts_data = array();
+
+    $all_attempts = get_attempts_for_quiz($quizid);
+    foreach ($all_attempts as $a) {
+        $attempt = quiz_attempt::create($a->id);
+        // TODO VVV make separate this in class
+
+        if (!$attempt->is_finished()) {
+            // TODO VVV add configuration if we should silently ignore this or throw error
+            continue;
+        }
+
+        $raw_data = array();
+
+        foreach ($attempt->get_slots() as $slot) {
+            $qtype = $attempt->get_question_type_name($slot);
+
+            $qa = $attempt->get_question_attempt($slot);
+            foreach ($qa->get_step_iterator() as $step) {
+                $raw_data[] = array(
+                    'timestamp' => $step->get_timecreated(),
+                    'slot' => $slot,
+                    'type' => $qtype,
+                    'state' => $step->get_state());
+            }
+
+            usort($raw_data, function ($a, $b) {
+                if ($a['timestamp'] == $b['timestamp']) {
+                    return $a['slot'] - $b['slot'];
+                }
+
+                return $a['timestamp'] - $b['timestamp'];
+            });
+
+        }
+
+        $idx = 0;
+        while($raw_data[$idx]['timestamp'] == $raw_data[0]['timestamp']){
+            // We are skipping the init state for the question
+            $idx++;
+        }
+
+        $attempt_data = array();
+
+        while($raw_data[$idx]['state'] != question_state::$gradedright && $raw_data[$idx]['state'] != question_state::$gradedwrong) {
+            $data = $raw_data[$idx];
+            $attempt_data[] = array(
+                'slot' => $data['slot'],
+                'time' => $data['timestamp'] - $raw_data[$idx - 1]['timestamp'],
+                'type' => $data['type']);
+            $idx++;
+        }
+
+        // Add the difficulty of the variation to the $attempt_data
+        foreach ($attempt_data as &$data) {
+            if ($data['type'] != 'codecpp') {
+                continue;
+            }
+
+            $qa = $attempt->get_question_attempt($data['slot']);
+            foreach ($qa->get_step_iterator() as $step) {
+                if (!$step->has_qt_var('_qtext_')) {
+                    continue;
+                }
+                $data['difficulty'] = $step->get_qt_var('_qdiffc_');
+                $data['text'] = $step->get_qt_var('_qtext_');
+                // TODO VVV we can use the information how close we are to the correct answer
+            }
+        }
+
+        $all_attempts_data[] = $attempt_data;
     }
 
+    $result = qtype_codecpp::call_service('update_weights', json_encode($all_attempts_data));
     $result = json_decode($result)->weights;
 
     $mform = new update_weights_decision_form($result,null, ['returnurl' => $thispageurl, 'quizid' => $quizid]);
@@ -153,4 +218,18 @@ function throw_if_quiz($quizid) {
     if ($DB->record_exists('question_codecpp_quizupdate', array('id' => $quizid))) {
         throw new moodle_exception('errquizalreadyupdated', 'qtype_codecpp', '', null, $quizid);
     }
+}
+
+function get_attempts_for_quiz($quizid) {
+    global $DB;
+
+    $sql = 'SELECT quiza.id,
+       u.id AS userid,
+       quiza.timefinish,
+       quiza.timestart
+       FROM {user} u
+        LEFT JOIN {quiz_attempts} quiza ON quiza.userid = u.id AND quiza.quiz = :quizid
+       WHERE quiza.id IS NOT NULL AND quiza.preview = 0 AND (quiza.state = \'finished\' OR quiza.state IS NULL)';
+
+    return $DB->get_records_sql($sql, array('quizid' => $quizid));
 }

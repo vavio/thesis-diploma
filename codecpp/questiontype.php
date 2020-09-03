@@ -50,7 +50,7 @@ class qtype_codecpp extends question_type
         return 2;
     }
 
-    public static function get_service_url() {
+    private static function get_service_url() {
         $config = get_config('qtype_codecpp');
 
         $protocol = 'https';
@@ -59,6 +59,19 @@ class qtype_codecpp extends question_type
         }
 
         return sprintf('%s://%s:%d', $protocol, $config->servicehost, $config->serviceport);
+    }
+
+    public static function call_service($path, $data) {
+        $c = new curl();
+        $c->setHeader(array('Content-type: application/json'));
+        $result = $c->post(qtype_codecpp::get_service_url() . '/' . $path, $data);
+
+        if ($c->get_errno()) {
+            throw new moodle_exception('err' . $path, 'qtype_codecpp', '',
+                array('url' => qtype_codecpp::get_service_url(), 'result' => $result), json_encode($data));
+        }
+
+        return $result;
     }
 
     // This gets called by editquestion.php after the standard question is saved.
@@ -278,7 +291,7 @@ class qtype_codecpp extends question_type
             "source_code" => html_to_text($question->questiontext),
             "edit" => $editable
         );
-        $callresult = $this->callAPI("POST", qtype_codecpp::get_service_url() . "/codeprocessor", json_encode($call_data));
+        $callresult = qtype_codecpp::call_service("codeprocessor", json_encode($call_data);
         $callresult = json_decode($callresult, true);
         for ($i = 0; $i < count($callresult); $i++) {
             $new_question = new stdClass();
@@ -289,45 +302,6 @@ class qtype_codecpp extends question_type
 
             $DB->insert_record('question_codecpp_dataset', $new_question);
         }
-    }
-
-    public function callAPI($method, $url, $data)
-    {
-        // TODO VVV replace with moodle curl
-        $curl = curl_init();
-
-        switch ($method) {
-            case "POST":
-                curl_setopt($curl, CURLOPT_POST, 1);
-                if ($data)
-                    curl_setopt($curl, CURLOPT_POSTFIELDS, $data);
-                break;
-            case "PUT":
-                curl_setopt($curl, CURLOPT_CUSTOMREQUEST, "PUT");
-                if ($data)
-                    curl_setopt($curl, CURLOPT_POSTFIELDS, $data);
-                break;
-            default:
-                if ($data)
-                    $url = sprintf("%s?%s", $url, http_build_query($data));
-        }
-
-        // OPTIONS:
-        curl_setopt($curl, CURLOPT_URL, $url);
-        curl_setopt($curl, CURLOPT_HTTPHEADER, array(
-            'Content-Type: application/json',
-        ));
-        curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
-        curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
-        curl_setopt($curl, CURLOPT_CONNECTTIMEOUT, 100);
-
-        // EXECUTE:
-        $result = curl_exec($curl);
-        if (!$result) {
-            die("Connection Failure");
-        }
-        curl_close($curl);
-        return $result;
     }
 
     public function save_question_options($question)
@@ -397,7 +371,7 @@ class qtype_codecpp extends question_type
         $call_data = array(
             "source_code" => html_to_text($question_text)
         );
-        $callresult = $this->callAPI("POST", qtype_codecpp::get_service_url() . "/get_key_locations", json_encode($call_data));
+        $callresult = qtype_codecpp::call_service("get_key_locations", json_encode($call_data);
         $callresult = json_decode($callresult, true);
         $result_data = array();
         for ($i = 0; $i < count($callresult['result']['key_locations']); $i++) {
