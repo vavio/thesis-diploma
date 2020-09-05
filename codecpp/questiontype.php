@@ -291,7 +291,7 @@ class qtype_codecpp extends question_type
             "source_code" => html_to_text($question->questiontext),
             "edit" => $editable
         );
-        $callresult = qtype_codecpp::call_service("codeprocessor", json_encode($call_data);
+        $callresult = qtype_codecpp::call_service("codeprocessor", json_encode($call_data));
         $callresult = json_decode($callresult, true);
         for ($i = 0; $i < count($callresult); $i++) {
             $new_question = new stdClass();
@@ -371,7 +371,7 @@ class qtype_codecpp extends question_type
         $call_data = array(
             "source_code" => html_to_text($question_text)
         );
-        $callresult = qtype_codecpp::call_service("get_key_locations", json_encode($call_data);
+        $callresult = qtype_codecpp::call_service("get_key_locations", json_encode($call_data));
         $callresult = json_decode($callresult, true);
         $result_data = array();
         for ($i = 0; $i < count($callresult['result']['key_locations']); $i++) {

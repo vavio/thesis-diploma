@@ -5,3 +5,4 @@ SERVER_PORT = 5000
 SERVER_IS_DEBUG = True
 
 WORKING_CODES_DIR = '/Users/vavio/Diplomska/codes'
+DB_FILE = 'constants.db'

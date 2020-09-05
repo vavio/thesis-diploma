@@ -30,7 +30,70 @@ defined('MOODLE_INTERNAL') || die();
  * @param int $oldversion the version we are upgrading from.
  */
 function xmldb_qtype_codecpp_upgrade($oldversion) {
-    global $CFG;
+    global $DB;
+    $dbman = $DB->get_manager();
+
+    if ($oldversion < 2020090501) {
+        if ($dbman->table_exists('dataset_codecpp')) {
+            $table = new xmldb_table('dataset_codecpp');
+            // There is no need to migrate the data, even though it would be nice to have it
+            $dbman->drop_table($table);
+        }
+
+        if (!$dbman->table_exists('question_codecpp_dataset')) {
+            $table = new xmldb_table('question_codecpp_dataset');
+            $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null );
+            $table->add_field('questionid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null, 'id');
+            $table->add_field('text', XMLDB_TYPE_TEXT, null, null, XMLDB_NOTNULL, null, null, 'questionid');
+            $table->add_field('result', XMLDB_TYPE_TEXT, null, null, XMLDB_NOTNULL, null, null, 'text');
+            $table->add_field('difficulty', XMLDB_TYPE_FLOAT, '11,4', null, XMLDB_NOTNULL, null, 0.00, 'result');
+
+            $table->add_key('primary', XMLDB_KEY_PRIMARY, ['id']);
+            $table->add_key('questionid', XMLDB_KEY_FOREIGN, ['questionid'], 'question', ['id']);
+
+            $dbman->create_table($table);
+        }
+
+        if ($dbman->field_exists('question_codecpp', 'question')) {
+            // Drop the old foreign key
+            $table = new xmldb_table('question_codecpp');
+            $refkey = new xmldb_key('question', XMLDB_KEY_FOREIGN, ['question'], 'question', ['id']);
+            $dbman->drop_key($table, $refkey);
+
+            // Drop the field now
+            $table->deleteField('question');
+
+            // Now rename it
+            $field = new xmldb_field('questionid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+            $dbman->add_field($table, $field);
+            $dbman->add_key($table, $refkey);
+        }
+
+        if ($dbman->field_exists('question_codecpp', 'trueanswer')){
+            $table = new xmldb_table('question_codecpp');
+            $table->deleteField('trueanswer');
+        }
+
+        if ($dbman->field_exists('question_codecpp', 'falseanswer')){
+            $table = new xmldb_table('question_codecpp');
+            $table->deleteField('falseanswer');
+        }
+
+        if (!$dbman->table_exists('question_codecpp_quizupdate')) {
+            $table = new xmldb_table('question_codecpp_quizupdate');
+            $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null );
+            $table->add_field('quizid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null, 'id');
+            $table->add_field('timecreated', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0', 'quizid');
+            $table->add_field('changes_applied', XMLDB_TYPE_TEXT, null, null, XMLDB_NOTNULL, null, null, 'timecreated');
+
+            $table->add_key('primary', XMLDB_KEY_PRIMARY, ['id']);
+            $table->add_key('quizid', XMLDB_KEY_FOREIGN, ['quizid'], 'quiz', ['id']);
+
+            $dbman->create_table($table);
+        }
+
+        upgrade_plugin_savepoint(true, 2020090501, 'qtype', 'codecpp');
+    }
 
     return true;
 }

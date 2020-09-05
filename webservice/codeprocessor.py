@@ -1,11 +1,11 @@
 from hashlib import md5
 import clang.cindex
+import dbm
 import os
 import gzip
 import json
 from random import choice, random
 import string
-import constants
 import config
 
 
@@ -32,41 +32,43 @@ class ComplexityCalculator:
         self.row_counts = row_counts
         self.ignore_filename = ignore_filename
 
-        self.weights = {
-            clang.cindex.CursorKind.FOR_STMT: constants.FOR_STATEMENT,
-            clang.cindex.CursorKind.WHILE_STMT: constants.WHILE_STATEMENT,
-            clang.cindex.CursorKind.DO_STMT: constants.DO_STATEMENT,
-            clang.cindex.CursorKind.IF_STMT: constants.IF_STATEMENT,
+        with dbm.open(os.path.join(config.WORKING_CODES_DIR, config.DB_FILE), 'c') as db:
+            self.weights = {
+                # TODO VVV update to read from DB
+                clang.cindex.CursorKind.FOR_STMT: db['FOR_STATEMENT'],
+                clang.cindex.CursorKind.WHILE_STMT: db['WHILE_STATEMENT'],
+                clang.cindex.CursorKind.DO_STMT: db['DO_STATEMENT'],
+                clang.cindex.CursorKind.IF_STMT: db['IF_STATEMENT'],
 
-            '+': constants.ADD,
-            '+=': constants.ADD,
+                '+': db['ADD'],
+                '+=': db['ADD'],
 
-            '-': constants.SUBTRACT,
-            '-=': constants.SUBTRACT,
+                '-': db['SUBTRACT'],
+                '-=': db['SUBTRACT'],
 
-            '*': constants.MULTIPLY,
-            '*=': constants.MULTIPLY,
+                '*': db['MULTIPLY'],
+                '*=': db['MULTIPLY'],
 
-            '/': constants.DIVIDE,
-            '/=': constants.DIVIDE,
+                '/': db['DIVIDE'],
+                '/=': db['DIVIDE'],
 
-            '%': constants.MODULO,
-            '%=': constants.MODULO,
+                '%': db['MODULO'],
+                '%=': db['MODULO'],
 
-            '<': constants.COMPARISON_OPERATORS,
-            '<=': constants.COMPARISON_OPERATORS,
-            '==': constants.COMPARISON_OPERATORS,
-            '!=': constants.COMPARISON_OPERATORS,
-            '>=': constants.COMPARISON_OPERATORS,
-            '>': constants.COMPARISON_OPERATORS,
+                '<': db['COMPARISON_OPERATORS'],
+                '<=': db['COMPARISON_OPERATORS'],
+                '==': db['COMPARISON_OPERATORS'],
+                '!=': db['COMPARISON_OPERATORS'],
+                '>=': db['COMPARISON_OPERATORS'],
+                '>': db['COMPARISON_OPERATORS'],
 
-            '!': constants.LOGICAL_OPERATORS,
-            '&&': constants.LOGICAL_OPERATORS,
-            '||': constants.LOGICAL_OPERATORS,
+                '!': db['LOGICAL_OPERATORS'],
+                '&&': db['LOGICAL_OPERATORS'],
+                '||': db['LOGICAL_OPERATORS'],
 
-            '++': constants.INCREMENT,
-            '--': constants.INCREMENT
-        }
+                '++': db['INCREMENT'],
+                '--': db['INCREMENT']
+            }
 
     def _dfs(self, node):
         if str(node.extent.start.file) != self.ignore_filename and node.extent.start.file is not None:

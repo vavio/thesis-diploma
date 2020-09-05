@@ -45,14 +45,16 @@ $thispageurl = new moodle_url('/question/type/codecpp/update_weights.php');
 if ($confirm && confirm_sesskey()) {
     throw_if_quiz($quizid);
 
+    $new_weights = json_encode(unserialize(base64_decode($changes_applied)));
+
     $updated_record = new stdClass();
     $updated_record->quizid = $quizid;
     $updated_record->timecreated = time();
-    $updated_record->changes_applied = ‌‌json_encode(unserialize(base64_decode($changes_applied)));
+    $updated_record->changes_applied = $new_weights;
 
-    // TODO VVV call the service to update the weights
+    qtype_codecpp::call_service('accept_weights', $new_weights);
+    $DB->insert_record('question_codecpp_quizupdate', $updated_record);
 
-//    $DB->insert_record('question_codecpp_dataset', $new_question); // TODO VVV write to DB
     $quizname = $DB->get_record('quiz', array('id' => $quizid), 'name')->name;
     redirect($thispageurl, sprintf(get_string('weights_updated_success', 'qtype_codecpp'), $quizname));
 }
@@ -191,7 +193,8 @@ foreach ($quiz_with_codecpp as $quiz) {
     $quizurl = new moodle_url('/mod/quiz/view.php', array('q' => $quiz->quiz_id));
     $row[] = html_writer::link($quizurl, $quiz->name, array('title' => $quiz->name));
     if (isset($updated_quizes[$quiz->quiz_id])) {
-        $row[] = userdate(DATE_ATOM, $updated_quizes[$quiz->quiz_id]);
+        $timecreated = $DB->get_record('question_codecpp_quizupdate', array('quizid' => $quiz->quiz_id), 'timecreated')->timecreated;
+        $row[] = userdate((int)$timecreated);
     } else {
         $row[] = html_writer::link(
             new moodle_url($thispageurl, array('quizid' => $quiz->quiz_id, 'sesskey' => sesskey())),
@@ -210,13 +213,14 @@ echo $OUTPUT->footer();
 
 function throw_if_quiz($quizid) {
     global $DB;
+    global $thispageurl;
 
     if (!$DB->record_exists('quiz', array('id' => $quizid))) {
-        throw new moodle_exception('errquizdoesntexists', 'qtype_codecpp', '', null, $quizid);
+        throw new moodle_exception('errquizdoesntexists', 'qtype_codecpp', $thispageurl, null, $quizid);
     }
 
-    if ($DB->record_exists('question_codecpp_quizupdate', array('id' => $quizid))) {
-        throw new moodle_exception('errquizalreadyupdated', 'qtype_codecpp', '', null, $quizid);
+    if ($DB->record_exists('question_codecpp_quizupdate', array('quizid' => $quizid))) {
+        throw new moodle_exception('errquizalreadyupdated', 'qtype_codecpp', $thispageurl, null, $quizid);
     }
 }
 
