@@ -74,6 +74,20 @@ class qtype_codecpp extends question_type
         return $result;
     }
 
+    public static function find_editable($question_text)
+    {
+        $call_data = array(
+            "source_code" => html_to_text($question_text)
+        );
+        $callresult = qtype_codecpp::call_service("get_key_locations", json_encode($call_data));
+        $callresult = json_decode($callresult, true);
+        $result_data = array();
+        for ($i = 0; $i < count($callresult['result']['key_locations']); $i++) {
+            $result_data[] = explode(";", $callresult['result']['key_locations'][$i]);
+        }
+        return $result_data;
+    }
+
     // This gets called by editquestion.php after the standard question is saved.
     public function print_next_wizard_page($question, $form, $course)
     {
@@ -113,7 +127,7 @@ class qtype_codecpp extends question_type
         // See where we're coming from.
         switch ($wizardnow) {
             case 'datasetdefinitions':
-                require("{$CFG->dirroot}/question/type/codecpp/datasetdefinitions_form.php");
+                require("{$CFG->dirroot}/question/type/codecpp/classes/datasetdefinitions_form.php");
                 $mform = new question_dataset_dependent_definitions_form(
                     "{$submiturl}?wizardnow=datasetdefinitions", $question);
                 break;
@@ -234,7 +248,7 @@ class qtype_codecpp extends question_type
     public function generate_datasets($form, $question)
     {
         global $DB, $CFG;
-        $possibledatasets = $this->find_editable($question->questiontext);
+        $possibledatasets = qtype_codecpp::find_editable($question->questiontext);
         $editable = "";
         for ($i = 1; $i <= count($form->editable); $i++) {
             $temp = array();
@@ -349,35 +363,6 @@ class qtype_codecpp extends question_type
         $this->save_hints($question);
 
         return true;
-    }
-
-    /**
-     * Loads the question type specific options for the question.
-     */
-
-    public function get_question_substring($question, $from, $to)
-    {
-        $cleaned_questiontext = html_to_text($question->questiontext);
-        $lines = explode("\n", $cleaned_questiontext);
-        $result = array();
-        for ($i = $from - 1; $i <= $to - 1; $i++) {
-            $result[] = $lines[$i];
-        }
-        return $result;
-    }
-
-    public function find_editable($question_text)
-    {
-        $call_data = array(
-            "source_code" => html_to_text($question_text)
-        );
-        $callresult = qtype_codecpp::call_service("get_key_locations", json_encode($call_data));
-        $callresult = json_decode($callresult, true);
-        $result_data = array();
-        for ($i = 0; $i < count($callresult['result']['key_locations']); $i++) {
-            $result_data[] = explode(";", $callresult['result']['key_locations'][$i]);
-        }
-        return $result_data;
     }
 
     public function get_question_options($question)

@@ -59,3 +59,5 @@ $string['servicehost'] = 'Service HOST';
 $string['servicehost_text'] = '';
 $string['serviceport'] = 'Service PORT';
 $string['serviceport_text'] = '';
+$string['code_preview_lines'] = 'Code preview lines#';
+$string['code_preview_lines_text'] = 'Before and After lines to diplay for context';
