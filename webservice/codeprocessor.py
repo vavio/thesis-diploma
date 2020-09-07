@@ -6,6 +6,7 @@ import gzip
 import json
 import re
 from random import choice, random
+from subprocess import STDOUT, check_output, TimeoutExpired
 import string
 import config
 
@@ -35,41 +36,44 @@ class ComplexityCalculator:
 
         with dbm.open(os.path.join(config.WORKING_CODES_DIR, config.DB_FILE), 'c') as db:
             self.weights = {
-                # TODO VVV update to read from DB
-                clang.cindex.CursorKind.FOR_STMT: db['FOR_STATEMENT'],
-                clang.cindex.CursorKind.WHILE_STMT: db['WHILE_STATEMENT'],
-                clang.cindex.CursorKind.DO_STMT: db['DO_STATEMENT'],
-                clang.cindex.CursorKind.IF_STMT: db['IF_STATEMENT'],
+                clang.cindex.CursorKind.FOR_STMT: 'FOR_STATEMENT',
+                clang.cindex.CursorKind.WHILE_STMT: 'WHILE_STATEMENT',
+                clang.cindex.CursorKind.DO_STMT: 'DO_STATEMENT',
+                clang.cindex.CursorKind.IF_STMT: 'IF_STATEMENT',
 
-                '+': db['ADD'],
-                '+=': db['ADD'],
+                '+': 'ADD',
+                '+=': 'ADD',
 
-                '-': db['SUBTRACT'],
-                '-=': db['SUBTRACT'],
+                '-': 'SUBTRACT',
+                '-=': 'SUBTRACT',
 
-                '*': db['MULTIPLY'],
-                '*=': db['MULTIPLY'],
+                '*': 'MULTIPLY',
+                '*=': 'MULTIPLY',
 
-                '/': db['DIVIDE'],
-                '/=': db['DIVIDE'],
+                '/': 'DIVIDE',
+                '/=': 'DIVIDE',
 
-                '%': db['MODULO'],
-                '%=': db['MODULO'],
+                '%': 'MODULO',
+                '%=': 'MODULO',
 
-                '<': db['COMPARISON_OPERATORS'],
-                '<=': db['COMPARISON_OPERATORS'],
-                '==': db['COMPARISON_OPERATORS'],
-                '!=': db['COMPARISON_OPERATORS'],
-                '>=': db['COMPARISON_OPERATORS'],
-                '>': db['COMPARISON_OPERATORS'],
+                '<': 'COMPARISON_OPERATORS',
+                '<=': 'COMPARISON_OPERATORS',
+                '==': 'COMPARISON_OPERATORS',
+                '!=': 'COMPARISON_OPERATORS',
+                '>=': 'COMPARISON_OPERATORS',
+                '>': 'COMPARISON_OPERATORS',
 
-                '!': db['LOGICAL_OPERATORS'],
-                '&&': db['LOGICAL_OPERATORS'],
-                '||': db['LOGICAL_OPERATORS'],
+                '!': 'LOGICAL_OPERATORS',
+                '&&': 'LOGICAL_OPERATORS',
+                '||': 'LOGICAL_OPERATORS',
 
-                '++': db['INCREMENT'],
-                '--': db['INCREMENT']
+                '++': 'INCREMENT',
+                '--': 'INCREMENT'
             }
+
+            for key in self.weights.keys():
+                value = self.weights[key]
+                self.weights[key] = float(db[value].decode('utf-8'))
 
     def _dfs(self, node):
         if str(node.extent.start.file) != self.ignore_filename and node.extent.start.file is not None:
@@ -137,7 +141,7 @@ class CodeProcessor:
 
     def _execute_file(self):
         os.chdir(self.working_dir)
-        return os.popen('./' + self._executable_filename()).read()
+        return check_output('./' + self._executable_filename(), stderr=STDOUT, timeout=config.EXECUTION_TIMEOUT).decode('utf-8')
 
     def _run_gcov(self):
         os.chdir(self.working_dir)
@@ -335,7 +339,12 @@ def generate_variation(code, edit):
         new_source_code = construct_code(code, key_loc, new_variation)
         new_cp = CodeProcessor(new_source_code)
         if new_source_code not in output:
-            code_output = new_cp.get_output()
+            try:
+                code_output = new_cp.get_output()
+            except TimeoutExpired:
+                print('Timed out for ' + new_cp.filename)
+                continue
+
             if len(code_output) == 0:
                 continue
 

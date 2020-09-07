@@ -90,28 +90,8 @@ def codeprocessor():
 
 
 if __name__ == '__main__':
-    code = '#include <stdio.h>\n#include <stdlib.h>\n#include <math.h>\n\nint main()\n{\n\xa0\xa0\xa0 for (int i=1; i<=6; i++)\n\xa0\xa0\xa0 {\n\xa0\xa0\xa0\xa0\xa0\xa0\xa0 if (i%2==1) printf("%d",i);\n\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0 else printf("%d",i-3);\n\xa0\xa0\xa0\xa0\xa0\xa0\xa0 if (i>12)\n\xa0\xa0\xa0\xa0\xa0\xa0\xa0 {\n\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0 printf("%d%d",i%3, fabs(i/4));\n\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0 printf("%d%d%d%d",i/5, fabs(i%4), i--, --i);\n\xa0\xa0\xa0\xa0\xa0\xa0\xa0 }\n\xa0\xa0\xa0 }\n\xa0\xa0\xa0 //** printf("%d",a^2+b%3+c);\n\xa0\xa0\xa0 //\n\xa0\xa0\xa0 return 0;\n}\n\n'
-    formatted_edit = [
-        "1:10;^5;100",
-        "*;-;%;<;>;!=",
-        "6",
-        "+;=;<=;>=;==",
-        "2",
-        "1",
-        "lowercase",
-        "lowercase;digits",
-        "+;<=;>;!=",
-        "3",
-        "12",
-        "uppercase",
-        "*;>=;==",
-        "3",
-        "4",
-        "uppercase",
-        "5",
-        "+;<=;>",
-        "4",
-        "0"]
-    print(generate_variation(code, formatted_edit))
+    # code = '#include <stdio.h>\n#include <stdlib.h>\n#include <math.h>\n\nint main()\n{\n\xa0\xa0\xa0 for (int i=1; i<=6; i++)\n\xa0\xa0\xa0 {\n\xa0\xa0\xa0\xa0\xa0\xa0\xa0 if (i%2==1) printf("%d",i);\n\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0 else printf("%d",i-3);\n\xa0\xa0\xa0\xa0\xa0\xa0\xa0 if (i>12)\n\xa0\xa0\xa0\xa0\xa0\xa0\xa0 {\n\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0 printf("%d%d",i%3, fabs(i/4));\n\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0 printf("%d%d%d%d",i/5, fabs(i%4), i--, --i);\n\xa0\xa0\xa0\xa0\xa0\xa0\xa0 }\n\xa0\xa0\xa0 }\n\xa0\xa0\xa0 //** printf("%d",a^2+b%3+c);\n\xa0\xa0\xa0 //\n\xa0\xa0\xa0 return 0;\n}\n\n'
+    # formatted_edit = ["1:10;^5;100", "*;-;%;<;>;!=", "6", "+;=;<=;>=;==", "2", "1", "lowercase", "lowercase;digits", "+;<=;>;!=", "3", "12", "uppercase", "*;>=;==", "3", "4", "uppercase", "5", "+;<=;>", "4", "0"]
+    # print(generate_variation(code, formatted_edit))
     init_dbm()
     app.run(host='0.0.0.0', port=config.SERVER_PORT, debug=config.SERVER_IS_DEBUG)
