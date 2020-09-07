@@ -4,6 +4,7 @@ import dbm
 import os
 import gzip
 import json
+import re
 from random import choice, random
 import string
 import config
@@ -222,6 +223,10 @@ class CodeProcessor:
 
 
 class KeyLocation:
+    re_value = re.compile(r'^-?\d+$')
+    re_range = re.compile(r'^-?\d+:-?\d+$')
+    re_exclude = re.compile(r'^\^-?\d')
+
     def __init__(self, kl):
         self.start_row = kl[0][0]
         self.start_column = kl[0][1]
@@ -232,76 +237,54 @@ class KeyLocation:
         self.extra_info = ""
 
     def set_extra_info(self, line):
-        if line == "X":
-            self.extra_info = ""
-        else:
-            self.extra_info = line
+        self.extra_info = line
 
     def generate_variation(self):
-        if self.location_type == "binary_op":
+        if self.location_type == "binary_op" or self.location_type == "logical":
             if self.extra_info == "":
                 return self.value
-            temp = self.extra_info.split(";")
-            choices = list()
-            if temp[0] == "1":
-                choices.append("*")
-            if temp[1] == "1":
-                choices.append("+")
-            if temp[2] == "1":
-                choices.append("-")
-            if temp[3] == 1:
-                choices.append("=")
-            if temp[4] == "1":
-                choices.append("%")
-            if temp[5] == "1":
-                choices.append("<=")
-            if temp[6] == "1":
-                choices.append("<")
-            if temp[7] == "1":
-                choices.append(">=")
-            if temp[8] == "1":
-                choices.append(">")
-            if temp[9] == "1":
-                choices.append("==")
-            if temp[10] == "1":
-                choices.append("!=")
-            return choice(choices)
+            return choice(self.extra_info.split(";"))
+
         if self.location_type == "integer":
+            # TODO VVV implement for float
             if self.extra_info == "":
                 return self.value
-            temp = self.extra_info.split(";")
+            splitted = self.extra_info.split(";")
             numbers = list()
-            for element in temp:
-                numbers.append(int(element))
+            excluded = set()
+            for s in splitted:
+                if KeyLocation.re_value.match(s):
+                    numbers.append(int(s))
+                elif KeyLocation.re_range.match(s):
+                    splitted_range = s.split(':')
+                    for val in range(int(splitted_range[0]), int(splitted_range[1])):
+                        numbers.append(val)
+                elif KeyLocation.re_exclude.match(s):
+                    excluded.add(int(s[1:]))
+
+            numbers = [n for n in numbers if n not in excluded]
             return str(choice(numbers))
+
         if self.location_type == "float":
             if self.extra_info == "":
                 return self.value
             temp = self.extra_info.split(";")
             result = round(random() * (float(temp[1]) - float(temp[0])) + float(temp[0]), 2)
             return str(result)
-        if self.location_type == "logical":
-            if self.extra_info == "":
-                return self.value
-            temp = self.extra_info.split(";")
-            choices = list()
-            if temp[0] == "1":
-                choices.append("&&")
-            if temp[1] == "1":
-                choices.append("||")
-            return choice(choices)
+
         if self.location_type == "text":
             if self.extra_info == "":
                 return self.value
             choices = list()
-            temp = self.extra_info.split(";")
-            if temp[0] == "1":
-                choices.extend(string.ascii_lowercase)
-            if temp[1] == "1":
-                choices.extend(string.ascii_uppercase)
-            if temp[2] == "1":
-                choices.extend(string.digits)
-            random_text = ''.join([choice(choices) for i in range(len(self.value) - 2)])
+            splitted = self.extra_info.split(";")
+            for s in splitted:
+                if s == "lowercase":
+                    choices.extend(string.ascii_lowercase)
+                elif s == "uppercase":
+                    choices.extend(string.ascii_uppercase)
+                elif s == "digits":
+                    choices.extend(string.digits)
+            random_text = ''.join([choice(choices) for _ in range(len(self.value) - 2)])
             return ''.join([self.value[0], random_text, self.value[-1]])
         return self.value
 

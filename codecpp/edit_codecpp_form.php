@@ -62,42 +62,6 @@ class qtype_codecpp_edit_form extends question_edit_form {
         if (!empty($question->options->trueanswer)) {
             $trueanswer = $question->options->answers[$question->options->trueanswer];
             $question->correctanswer = ($trueanswer->fraction != 0);
-
-            $draftid = file_get_submitted_draft_itemid('trueanswer');
-            $answerid = $question->options->trueanswer;
-
-            $question->feedbacktrue = array();
-            $question->feedbacktrue['format'] = $trueanswer->feedbackformat;
-            $question->feedbacktrue['text'] = file_prepare_draft_area(
-                $draftid,             // Draftid
-                $this->context->id,   // context
-                'question',           // component
-                'answerfeedback',     // filarea
-                !empty($answerid) ? (int) $answerid : null, // itemid
-                $this->fileoptions,   // options
-                $trueanswer->feedback // text.
-            );
-            $question->feedbacktrue['itemid'] = $draftid;
-        }
-
-        if (!empty($question->options->falseanswer)) {
-            $falseanswer = $question->options->answers[$question->options->falseanswer];
-
-            $draftid = file_get_submitted_draft_itemid('falseanswer');
-            $answerid = $question->options->falseanswer;
-
-            $question->feedbackfalse = array();
-            $question->feedbackfalse['format'] = $falseanswer->feedbackformat;
-            $question->feedbackfalse['text'] = file_prepare_draft_area(
-                $draftid,              // Draftid
-                $this->context->id,    // context
-                'question',            // component
-                'answerfeedback',      // filarea
-                !empty($answerid) ? (int) $answerid : null, // itemid
-                $this->fileoptions,    // options
-                $falseanswer->feedback // text.
-            );
-            $question->feedbackfalse['itemid'] = $draftid;
         }
 
         return $question;

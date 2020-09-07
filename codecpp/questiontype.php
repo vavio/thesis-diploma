@@ -102,7 +102,7 @@ class qtype_codecpp extends question_type
         switch ($form->wizardpage) {
             case 'question':
             case 'datasetdefinitions':
-                require("{$CFG->dirroot}/question/type/codecpp/datasetdefinitions.php");
+                require("{$CFG->dirroot}/question/type/codecpp/classes/datasetdefinitions.php");
                 break;
             default:
                 //print_error('invalidwizardpage', 'question');
@@ -245,65 +245,62 @@ class qtype_codecpp extends question_type
         return $question;
     }
 
+    protected function join_form_data($data, $ops) {
+        $temp = array();
+        foreach ($ops as $str => $bval) {
+            if ($data[$str]== '1') {
+                $temp[] = $bval;
+            }
+        }
+        return join(';', $temp);
+    }
+
     public function generate_datasets($form, $question)
     {
-        global $DB, $CFG;
-        $possibledatasets = qtype_codecpp::find_editable($question->questiontext);
-        $editable = "";
-        for ($i = 1; $i <= count($form->editable); $i++) {
-            $temp = array();
-            if ($form->editable[$i] == 0) {
-                $temp[] = "X";
-            } else if (rtrim($possibledatasets[$i - 1][5]) == "integer") {
-                if ($form->min[$i] != null) {
-                    $from = $form->min[$i];
-                    $to = $form->max[$i];
-                    $excluded = explode(",", $form->exclude[$i]);
-                    $invalid_values = array();
-                    for ($j = 0; $j < count($excluded); $j++) {
-                        $invalid_values[] = (int)$excluded[$j];
-                    }
-                    for ($j = $from; $j <= $to; $j++) {
-                        if (($form->exclude[$i] != null) && (in_array($j, $invalid_values, true)))
-                            continue;
-                        $temp[] = $j;
-                    }
-                } else {
-                    $exact_values = explode(",", $form->exact[$i]);
-                    for ($j = 0; $j < count($exact_values); $j++) {
-                        $temp[] = (int)$exact_values[$j];
-                    }
-                }
-            } else if (rtrim($possibledatasets[$i - 1][5]) == "binary_op") {
-                $temp[] = (string)$form->multiplication[$i];
-                $temp[] = (string)$form->addition[$i];
-                $temp[] = (string)$form->substraction[$i];
-                $temp[] = (string)$form->equals[$i];
-                $temp[] = (string)$form->modulo[$i];
-                $temp[] = (string)$form->smallerorequal[$i];
-                $temp[] = (string)$form->smaller[$i];
-                $temp[] = (string)$form->biggerorequal[$i];
-                $temp[] = (string)$form->bigger[$i];
-                $temp[] = (string)$form->equalsequals[$i];
-                $temp[] = (string)$form->notequals[$i];
-            } else if (rtrim($possibledatasets[$i - 1][5]) == "logical") {
-                $temp[] = (string)$form->andoperator[$i];
-                $temp[] = (string)$form->oroperator[$i];
-            } else if (rtrim($possibledatasets[$i - 1][5]) == "text") {
-                $temp[] = (string)$form->lowercase[$i];
-                $temp[] = (string)$form->uppercase[$i];
-                $temp[] = (string)$form->digits[$i];
-            } else if (rtrim($possibledatasets[$i - 1][5]) == "float") {
-                $temp[] = (string)$form->minfloat[$i];
-                $temp[] = (string)$form->maxfloat[$i];
+        global $DB;
+        $binary_ops = array(
+            'multiplication' => '*',
+            'addition' => '+',
+            'subtraction' => '-',
+            'equals' => '=',
+            'modulo' => '%',
+            'smallerorequal' => '<=',
+            'smaller' => '<',
+            'biggerorequal' => '>=',
+            'bigger' => '>',
+            'equalsequals' => '==',
+            'notequals' => '!='
+        );
+        $logical_ops = array('andoperator' => '&&', 'oroperator' => '||');
+        $string_ops = array('lowercase' => 'lowercase', 'uppercase' => 'uppercase', 'digits' => 'digits');
+
+        $service_data = array();
+        $editable = qtype_codecpp::find_editable($question->questiontext);
+        for ($idx = 0; $idx < count($editable); $idx++) {
+            $optype = rtrim($editable[$idx][5]);
+            switch ($optype) {
+                case "integer":
+                case "float":
+                    $service_data[$idx] = $form->range[$idx];
+                    break;
+
+                case "binary_op":
+                    $service_data[$idx] = $this->join_form_data($form->selectedoptions[$idx], $binary_ops);
+                    break;
+
+                case "logical":
+                    $service_data[$idx] = $this->join_form_data($form->selectedoptions[$idx], $logical_ops);
+                    break;
+
+                case "text":
+                    $service_data[$idx] = $this->join_form_data($form->selectedoptions[$idx], $string_ops);
+                    break;
             }
-            $editable .= join(";", $temp);
-            $editable .= "\n";
         }
 
         $call_data = array(
             "source_code" => html_to_text($question->questiontext),
-            "edit" => $editable
+            "edit" => json_encode($service_data)
         );
         $callresult = qtype_codecpp::call_service("codeprocessor", json_encode($call_data));
         $callresult = json_decode($callresult, true);

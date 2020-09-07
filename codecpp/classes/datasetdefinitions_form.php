@@ -43,69 +43,9 @@ class question_dataset_dependent_definitions_form extends question_wizard_form {
 
     protected function definition() {
         $mform = $this->_form;
+
         $mform->setDisableShortforms();
-
-        for ($idx = 0; $idx<count($this->possibledatasets); $idx++) {
-            $datasetentry = $this->possibledatasets[$idx];
-            if ($datasetentry == ""){
-                continue;
-            }
-            $mform->addElement('header', "header[{$idx}]",
-                  "Element ".(string)($idx + 1));
-
-            $mform->addElement('html', $this->get_code_label($datasetentry));
-
-//            $label = "<p>Starting row and column: " . $datasetentry[0] . " " . $datasetentry[1] . "</p>";
-//            $mform->addElement('html', $label);
-//            $label = "<p>Ending row and column: " . $datasetentry[2] ." " . $datasetentry[3] . "</p>";
-//            $mform->addElement('html', $label);
-//            $label = "<p>Value: ".$datasetentry[4]." Type: ".$datasetentry[5]."</p>";
-//            $mform->addElement('html', $label);
-
-            $temp = rtrim($datasetentry[5]);
-            if (strcmp($temp, "integer") == 0 || strcmp($temp, "float") == 0){
-                $mform->addElement('text', "range[{$idx}]", 'Range: ');
-            }
-            else if (strcmp($temp, "binary_op") == 0){
-                $checkboxes = [
-                    $mform->createElement('advcheckbox', "multiplication[{$idx}]", "", "*"),
-                    $mform->createElement('advcheckbox', "addition[{$idx}]", "", "+"),
-                    $mform->createElement('advcheckbox', "substraction[{$idx}]", "", "-"),
-                    $mform->createElement('advcheckbox', "equals[{$idx}]", "", "="),
-                    $mform->createElement('advcheckbox', "modulo[{$idx}]", "", "%"),
-                    $mform->createElement('advcheckbox', "smallerorequal[{$idx}]", "", "<="),
-                    $mform->createElement('advcheckbox', "smaller[{$idx}]", "", "<"),
-                    $mform->createElement('advcheckbox', "biggerorequal[{$idx}]", "", ">="),
-                    $mform->createElement('advcheckbox', "bigger[{$idx}]", "", ">"),
-                    $mform->createElement('advcheckbox', "equalsequals[{$idx}]", "", "=="),
-                    $mform->createElement('advcheckbox', "notequals[{$idx}]", "", "!=")
-                ];
-                $mform->addGroup($checkboxes, 'binary_opselectedoptions');
-            }
-            else if (strcmp($temp, "logical") == 0){
-                $checkboxes = [
-                    $mform->createElement('advcheckbox', "andoperator[{$idx}]", "", "&&"),
-                    $mform->createElement('advcheckbox', "oroperator[{$idx}]", "", "||")
-               ];
-                $mform->addGroup($checkboxes, 'logicalselectedoptions');
-            }
-            else if (strcmp($temp, "text") == 0){
-                $checkboxes = [
-                    $mform->createElement('advcheckbox', "lowercase[{$idx}]", "", "Lowercase letters"),
-                    $mform->createElement('advcheckbox', "uppercase[{$idx}]", "", "Uppercase letters"),
-                    $mform->createElement('advcheckbox', "digits[{$idx}]", "", "Digits")
-                    // TODO VVV add specific string
-                ];
-                $mform->addGroup($checkboxes, 'textselectedoptions');
-            }
-            $mform->addElement('advcheckbox', "editable[{$idx}]", "Edit", "", "", array(0, 1));
-        }
-        //$this->qtypeobj->generate_datasets($this->question);
-
-        // Temporary strings.
         $mform->setDefault('synchronize', 0);
-
-        $mform->addElement('submit', 'savechanges', "Save Changes");
 
         $this->add_hidden_fields();
 
@@ -114,6 +54,66 @@ class question_dataset_dependent_definitions_form extends question_wizard_form {
 
         $mform->addElement('hidden', 'wizard', 'datasetitems');
         $mform->setType('wizard', PARAM_ALPHA);
+
+        for ($idx = 0; $idx<count($this->possibledatasets); $idx++) {
+            $datasetentry = $this->possibledatasets[$idx];
+            if ($datasetentry == ""){
+                continue;
+            }
+
+            $mform->addElement('header', "header[{$idx}]", "Element ".(string)($idx + 1));
+
+            $mform->addElement('html', $this->get_code_label($datasetentry));
+
+            $edit_type = rtrim($datasetentry[5]);
+            if (strcmp($edit_type, "integer") == 0 || strcmp($edit_type, "float") == 0){
+                $mform->addElement('text', "range[{$idx}]", get_string('range_text', 'qtype_codecpp'));
+                $mform->addHelpButton("range[{$idx}]", 'range_text_explanation', 'qtype_codecpp');
+
+                continue;
+            }
+
+            if (strcmp($edit_type, "binary_op") == 0){
+                $checkboxes = [
+                    $mform->createElement('advcheckbox', "multiplication", "", "*"),
+                    $mform->createElement('advcheckbox', "addition", "", "+"),
+                    $mform->createElement('advcheckbox', "subtraction", "", "-"),
+                    $mform->createElement('advcheckbox', "equals", "", "="),
+                    $mform->createElement('advcheckbox', "modulo", "", "%"),
+                    $mform->createElement('advcheckbox', "smallerorequal", "", "<="),
+                    $mform->createElement('advcheckbox', "smaller", "", "<"),
+                    $mform->createElement('advcheckbox', "biggerorequal", "", ">="),
+                    $mform->createElement('advcheckbox', "bigger", "", ">"),
+                    $mform->createElement('advcheckbox', "equalsequals", "", "=="),
+                    $mform->createElement('advcheckbox', "notequals", "", "!=")
+                ];
+
+                $mform->addGroup($checkboxes, "selectedoptions[{$idx}]", get_string('binary_operators', 'qtype_codecpp'));
+                continue;
+            }
+
+            if (strcmp($edit_type, "logical") == 0){
+                $checkboxes = [
+                    $mform->createElement('advcheckbox', "andoperator", "", "&&"),
+                    $mform->createElement('advcheckbox', "oroperator", "", "||")
+               ];
+                $mform->addGroup($checkboxes, "selectedoptions[{$idx}]", get_string('logical_operators', 'qtype_codecpp'));
+                continue;
+            }
+
+            if (strcmp($edit_type, "text") == 0){
+                $checkboxes = [
+                    $mform->createElement('advcheckbox', "lowercase", "", get_string('lowercase_letters', 'qtype_codecpp')),
+                    $mform->createElement('advcheckbox', "uppercase", "", get_string('uppercase_letters', 'qtype_codecpp')),
+                    $mform->createElement('advcheckbox', "digits", "", get_string('digits', 'qtype_codecpp'))
+                    // TODO VVV add specific string
+                ];
+                $mform->addGroup($checkboxes, "selectedoptions[{$idx}]", get_string('text_options', 'qtype_codecpp'));
+                continue;
+            }
+        }
+
+        $mform->addElement('submit', 'savechanges', "Save Changes");
     }
 
     private function get_code_label($entry) {
@@ -145,21 +145,23 @@ class question_dataset_dependent_definitions_form extends question_wizard_form {
         return $label;
     }
 
-    // TODO VVV
-//    public function validation($data, $files) {
-//        $errors = parent::validation($data, $files);
-//        $datasets = $data['dataset'];
-//        $countvalid = 0;
-//        foreach ($datasets as $key => $dataset) {
-//            if ($dataset != '0') {
-//                $countvalid++;
-//            }
-//        }
-//        if (!$countvalid) {
-//            foreach ($datasets as $key => $dataset) {
-//                $errors['dataset['.$key.']'] = "OSAIJDOIASJD";
-//            }
-//        }
-//        return $errors;
-//    }
+    public function validation($data, $files) {
+        $errors = parent::validation($data, $files);
+
+        foreach ($data['range'] as $idx => $value) {
+            if (strlen($value) == 0) {
+                continue;
+            }
+
+            $splitted = explode(",", $value);
+
+            foreach ($splitted as $s) {
+                if (!preg_match('/(^-?\d+$|^-?\d+:-?\d+$|^\^-?\d)/m', $s)) {
+                    $errors["range[{$idx}]"] = get_string('range_error', 'qtype_codecpp');
+                }
+            }
+        }
+
+        return $errors;
+    }
 }
