@@ -69,22 +69,7 @@ def accept_weights():
 
 @app.route('/codeprocessor', methods=['POST'])
 def codeprocessor():
-    edit = request.json['edit']
-    formatted_edit = list()
-    for line in edit.split('\n'):
-        formatted_edit.append(line)
-        print(line)
-    temp = generate_variation(request.json['source_code'], formatted_edit)
-    result = []
-    i = 0
-    for element in temp:
-        curr = {
-            'id': i,
-            'difficulty': element[0],
-            'new_source_code': element[1],
-            'output': element[2]
-        }
-        result.append(curr)
+    result = generate_variation(request.json['source_code'], request.json['edit'])
     print(result)
     return jsonify(result), 201
 

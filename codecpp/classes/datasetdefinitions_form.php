@@ -55,13 +55,22 @@ class question_dataset_dependent_definitions_form extends question_wizard_form {
         $mform->addElement('hidden', 'wizard', 'datasetitems');
         $mform->setType('wizard', PARAM_ALPHA);
 
+        $config = get_config('qtype_codecpp');
+        if ($config->show_code_preview) {
+            $mform->addElement('header', 'source_code', get_string('source_code', 'qtype_codecpp'));
+            $mform->addElement('html', $this->get_code());
+            $mform->addElement('header', "empty_header", '');
+        }
+
+
         for ($idx = 0; $idx<count($this->possibledatasets); $idx++) {
             $datasetentry = $this->possibledatasets[$idx];
             if ($datasetentry == ""){
                 continue;
             }
 
-            $mform->addElement('header', "header[{$idx}]", "Element ".(string)($idx + 1));
+//            $mform->addElement('header', "header[{$idx}]", "Element ".(string)($idx + 1));
+            $mform->addElement('header', "header[{$idx}]", '');
 
             $mform->addElement('html', $this->get_code_label($datasetentry));
 
@@ -69,7 +78,7 @@ class question_dataset_dependent_definitions_form extends question_wizard_form {
             if (strcmp($edit_type, "integer") == 0 || strcmp($edit_type, "float") == 0){
                 $mform->addElement('text', "range[{$idx}]", get_string('range_text', 'qtype_codecpp'));
                 $mform->addHelpButton("range[{$idx}]", 'range_text_explanation', 'qtype_codecpp');
-
+                $mform->setType("range[{$idx}]", PARAM_TEXT);
                 continue;
             }
 
@@ -142,6 +151,18 @@ class question_dataset_dependent_definitions_form extends question_wizard_form {
         }
         $label = $label . html_writer::end_tag('code');
 
+        return $label;
+    }
+
+    private function get_code() {
+        $label = html_writer::start_tag('code', array('style' => 'color:black'));
+
+        foreach ($this->question_lines as $line) {
+            $label = $label . htmlspecialchars($line);
+            $label = $label . html_writer::empty_tag('br');
+        }
+
+        $label = $label . html_writer::end_tag('code');
         return $label;
     }
 

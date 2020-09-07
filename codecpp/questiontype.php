@@ -300,16 +300,16 @@ class qtype_codecpp extends question_type
 
         $call_data = array(
             "source_code" => html_to_text($question->questiontext),
-            "edit" => json_encode($service_data)
+            "edit" => $service_data
         );
         $callresult = qtype_codecpp::call_service("codeprocessor", json_encode($call_data));
         $callresult = json_decode($callresult, true);
-        for ($i = 0; $i < count($callresult); $i++) {
+        foreach ($callresult as $variation) {
             $new_question = new stdClass();
             $new_question->questionid = $question->id;
-            $new_question->text = $callresult[$i]['new_source_code'];
-            $new_question->result = $callresult[$i]['output'];
-            $new_question->difficulty = $callresult[$i]['difficulty'];
+            $new_question->text = $variation['new_source_code'];
+            $new_question->result = $variation['output'];
+            $new_question->difficulty = $variation['difficulty'];
 
             $DB->insert_record('question_codecpp_dataset', $new_question);
         }

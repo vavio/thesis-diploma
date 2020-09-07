@@ -55,6 +55,9 @@ if (is_siteadmin()) {
         get_string('serviceport', 'qtype_codecpp'),
         get_string('serviceport_text', 'qtype_codecpp'), 5000, PARAM_INT));
 
+    $settingspage->add(new admin_setting_configcheckbox('qtype_codecpp/show_code_preview',
+        get_string('show_code_preview', 'qtype_codecpp'),
+        get_string('show_code_preview_text', 'qtype_codecpp'), 1));
     $settingspage->add(new admin_setting_configtext('qtype_codecpp/code_preview_lines',
         get_string('code_preview_lines', 'qtype_codecpp'),
         get_string('code_preview_lines_text', 'qtype_codecpp'), 1, PARAM_INT));

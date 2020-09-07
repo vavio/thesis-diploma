@@ -77,7 +77,7 @@ if ($quizid && confirm_sesskey()) {
         // TODO VVV make separate this in class
 
         if (!$attempt->is_finished()) {
-            // TODO VVV add configuration if we should silently ignore this or throw error
+            // TODO VVV add check if it's correct
             continue;
         }
 
@@ -135,7 +135,6 @@ if ($quizid && confirm_sesskey()) {
                 }
                 $data['difficulty'] = $step->get_qt_var('_qdiffc_');
                 $data['text'] = $step->get_qt_var('_qtext_');
-                // TODO VVV we can use the information how close we are to the correct answer
             }
         }
 

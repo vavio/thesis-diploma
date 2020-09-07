@@ -253,7 +253,7 @@ class KeyLocation:
             # TODO VVV implement for float
             if self.extra_info == "":
                 return self.value
-            splitted = self.extra_info.split(";")
+            splitted = self.extra_info.split(",")
             numbers = list()
             excluded = set()
             for s in splitted:
@@ -349,7 +349,10 @@ def generate_variation(code, edit):
                 continue
 
             output[new_source_code] = code_output
-            return_list.append((new_cp.get_complexity(), new_source_code, output[new_source_code]))
-            print(new_source_code)
-    return_list.sort()
+            return_list.append({
+                'difficulty': new_cp.get_complexity(),
+                'new_source_code': new_source_code,
+                'output': output[new_source_code]
+            })
+            # print(new_source_code)
     return return_list
