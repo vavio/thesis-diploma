@@ -37,7 +37,7 @@ admin_externalpage_setup('qtype_codecpp_updateweigths');
 $confirm = optional_param('confirm', 0, PARAM_BOOL);
 $quizid = optional_param('quizid', '', PARAM_INT);
 $changes_applied = optional_param('changes_applied', '', PARAM_TEXT);
-$thispageurl = new moodle_url('/question/type/codecpp/update_weights.php');
+$thispageurl = new moodle_url('/question/type/codecpp/admin_update_weights.php');
 
 // Process actions ============================================================
 
@@ -161,7 +161,7 @@ $table->define_headers(array(
     get_string('quiz_name', 'qtype_codecpp'),
     get_string('last_updated', 'qtype_codecpp')
 ));
-$table->set_attribute('id', 'codecpp');
+$table->set_attribute('id', 'codecpp_weights');
 $table->set_attribute('class', 'admintable generaltable');
 $table->setup();
 

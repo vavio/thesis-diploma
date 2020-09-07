@@ -35,7 +35,15 @@ if (is_siteadmin()) {
         new admin_externalpage(
             'qtype_codecpp_updateweigths',
             get_string('update_weights', 'qtype_codecpp'),
-            new moodle_url('/question/type/codecpp/update_weights.php'),
+            new moodle_url('/question/type/codecpp/admin_update_weights.php'),
+            'moodle/site:config'
+        ));
+
+    $ADMIN->add('qtype_codecpp_category',
+        new admin_externalpage(
+            'qtype_codecpp_showquestiondata',
+            get_string('show_question_data', 'qtype_codecpp'),
+            new moodle_url('/question/type/codecpp/admin_show_question_data.php'),
             'moodle/site:config'
         ));
 

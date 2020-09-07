@@ -49,8 +49,15 @@ $string['pluginnameediting'] = 'Editing a CodeCPP question';
 $string['pluginnamesummary'] = 'A simple form of a question which generates unique questions based on the given template';
 $string['privacy:metadata'] = 'The CodeCPP question type plugin does not store any personal data.';
 
+$string['show_question_data'] = 'CodeCPP show question data';
+$string['format_question_data'] = 'Attempts data for question: %s';
+$string['question_name'] = 'Question name';
+$string['report'] = 'Report';
+$string['view_data'] = 'View data';
+
 $string['update_weights'] = 'CodeCPP update weights';
 $string['course_name'] = 'Course Name';
+$string['attempts_count'] = 'Number of attempts';
 $string['quiz_name'] = 'Quiz Name with CodeCPP questions';
 $string['last_updated'] = 'Update/Last updated';
 $string['update_button'] = 'Update';
