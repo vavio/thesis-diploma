@@ -26,7 +26,7 @@
 
 require_once('../../../config.php');
 require_once('./questiontype.php');
-require_once('./classes/update_weights_decision_form.php');
+require_once('./classes/attempts_data.php');
 require_once($CFG->libdir . '/tablelib.php');
 require_once($CFG->libdir . '/adminlib.php');
 require_once($CFG->libdir . '/xmlize.php');
@@ -43,16 +43,62 @@ echo $OUTPUT->header();
 
 // Accept.
 if ($questionid && confirm_sesskey()) {
-    $questioname = $DB->get_record('question', array('id' => $questionid), 'name')->name;
+    $question_data = get_question_data($questionid)[$questionid];
+
+    $all_attempts_data = array();
+    foreach ($question_data['quiz_data'] as $quiz_id => $quiz_data) {
+        $all_attempts = attempts_data::get_attempts_for_quiz($quiz_id);
+
+        foreach ($all_attempts as $a) {
+            $attempt = new attempts_data($a->id);
+            $all_attempts_data[] = $attempt->get_data();
+        }
+    }
+
+    $filtered_data = array();
+    foreach ($all_attempts_data as $attempt_data) {
+        foreach ($attempt_data as $data) {
+            if ($data['qid'] == $questionid) {
+                $filtered_data[] = $data;
+            }
+        }
+    }
+
+    $statistic = array();
+
+    foreach ($filtered_data as $data) {
+        $varid = $data['variation_id'];
+        if (!key_exists($varid, $statistic)) {
+            $statistic[$varid]['times'] = array();
+            $statistic[$varid]['difficulty'] = $data['difficulty'];
+            $statistic[$varid]['text'] = $data['text'];
+        }
+
+        $statistic[$varid]['times'][] = $data['time'];
+    }
+
+    usort($statistic, function ($a, $b) {
+        return (double)$a['difficulty'] - (double)$b['difficulty'];
+    });
+
+    $avg_data = array();
+    $diff_data = array();
+    $labels = array();
+
+    foreach ($statistic as $k => $s) {
+        $avg_data[] = array_sum($s['times']) / count($s['times']);
+        $diff_data[] = $s['difficulty'];
+        $labels[] = 'Variation ' . ($k + 1);
+    }
 
     $chart = new \core\chart_line();
-    $chart->set_title(sprintf(get_string('format_question_data', 'qtype_codecpp'), $questioname));
+    $chart->set_title(sprintf(get_string('format_question_data', 'qtype_codecpp'), $question_data['question_name']));
     $chart->set_smooth(true); // Calling set_smooth() passing true as parameter, will display smooth lines.
-    $sales = new \core\chart_series('sales', array(400, 500, 1200, 540));
-    $expenses = new \core\chart_series('expenses', array(1000, 1150, 680, 1250));
-    $chart->add_series($sales);
-    $chart->add_series($expenses);
-    $chart->set_labels(['2004', '2005', '2006', '2007']);
+    $avg_time = new \core\chart_series(get_string('average_time', 'qtype_codecpp'), $avg_data);
+    $difficulty = new \core\chart_series(get_string('difficulty', 'qtype_codecpp'), $diff_data);
+    $chart->add_series($avg_time);
+    $chart->add_series($difficulty);
+    $chart->set_labels($labels);
 
     echo $OUTPUT->render($chart);
     echo $OUTPUT->footer();
@@ -75,41 +121,7 @@ $table->set_attribute('id', 'codecpp_question_data');
 $table->set_attribute('class', 'admintable generaltable');
 $table->setup();
 
-// qs.id is used as first value because get_records_sql is using the first value as key and it needs to be unique
-$sql_data = $DB->get_records_sql("SELECT
-    qs.id,
-    q.id as question_id,
-    q.name as question_name,
-    qz.id as quiz_id,
- qz.name as quiz_name,
- c.id as course_id,
- c.fullname as course_fullname,
- c.shortname as course_shortname
-FROM {question} q
-JOIN {quiz_slots} qs ON q.id = qs.questionid
-LEFT JOIN {quiz} qz ON qz.id = qs.quizid
-LEFT JOIN {course} c ON c.id = qz.course 
-WHERE q.qtype = 'codecpp'
-ORDER BY q.id DESC"
-);
-
-$data = array();
-
-foreach ($sql_data as $item) {
-    if (!array_key_exists($item->question_id, $data)) {
-        $data[$item->question_id] = array(
-            'question_name' => $item->question_name,
-            'quiz_data' => array()
-        );
-    }
-
-    $data[$item->question_id]['quiz_data'][$item->quiz_id] = array(
-        'quiz_name' => $item->quiz_name,
-        'course_id' => $item->course_id,
-        'course_fullname' => $item->course_fullname,
-        'course_shortname' => $item->course_shortname
-    );
-}
+$data = get_question_data();
 
 foreach ($data as $question_id => $question_data) {
     $row = array();
@@ -127,7 +139,7 @@ foreach ($data as $question_id => $question_data) {
                 array('title' => sprintf('%s (%s)', $quiz_data['course_fullname'], $quiz_data['course_shortname'])));
 
         // TODO VVV improve this
-        $attempt_count += count(get_attempts_for_quiz($quiz_id));
+        $attempt_count += count(attempts_data::get_attempts_for_quiz($quiz_id));
     }
 
     $row[] = join(html_writer::empty_tag('br'), $quiz_array);
@@ -147,12 +159,47 @@ $table->finish_output();
 echo $OUTPUT->box_end();
 echo $OUTPUT->footer();
 
-function get_attempts_for_quiz($quizid) {
+function get_question_data($question_id = null) {
     global $DB;
+    // qs.id is used as first value because get_records_sql is using the first value as key and it needs to be unique
+    $sql_query = "
+    SELECT
+     qs.id,
+     q.id as question_id,
+     q.name as question_name,
+     qz.id as quiz_id,
+     qz.name as quiz_name,
+     c.id as course_id,
+     c.fullname as course_fullname,
+     c.shortname as course_shortname
+    FROM {question} q
+    JOIN {quiz_slots} qs ON q.id = qs.questionid
+    LEFT JOIN {quiz} qz ON qz.id = qs.quizid
+    LEFT JOIN {course} c ON c.id = qz.course 
+    WHERE q.qtype = 'codecpp'";
+    if ($question_id != null) {
+        $sql_query .= sprintf("\n AND q.id = %s", $question_id);
+    }
+    $sql_query .= "\n ORDER BY q.id DESC";
+    $sql_data = $DB->get_records_sql($sql_query);
 
-    $sql = 'SELECT quiza.id
-       FROM {quiz_attempts} quiza
-       WHERE quiza.quiz = :quizid AND quiza.preview = 0 AND (quiza.state = \'finished\' OR quiza.state IS NULL)';
+    $data = array();
 
-    return $DB->get_records_sql($sql, array('quizid' => $quizid));
+    foreach ($sql_data as $item) {
+        if (!array_key_exists($item->question_id, $data)) {
+            $data[$item->question_id] = array(
+                'question_name' => $item->question_name,
+                'quiz_data' => array()
+            );
+        }
+
+        $data[$item->question_id]['quiz_data'][$item->quiz_id] = array(
+            'quiz_name' => $item->quiz_name,
+            'course_id' => $item->course_id,
+            'course_fullname' => $item->course_fullname,
+            'course_shortname' => $item->course_shortname
+        );
+    }
+
+    return $data;
 }

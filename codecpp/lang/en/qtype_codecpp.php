@@ -19,8 +19,8 @@
  *
  * @package    qtype
  * @subpackage codecpp
- * @copyright  1999 onwards Martin Dougiamas  {@link http://moodle.com}
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @copyright  2020 onwards Valentin Ambaroski
+ * @license   http://opensource.org/licenses/mit-license The MIT License
  */
 
 $string['correctanswer'] = 'Correct answer';
@@ -54,6 +54,8 @@ $string['format_question_data'] = 'Attempts data for question: %s';
 $string['question_name'] = 'Question name';
 $string['report'] = 'Report';
 $string['view_data'] = 'View data';
+$string['difficulty'] = 'Difficulty';
+$string['average_time'] = 'Average response time';
 
 $string['update_weights'] = 'CodeCPP update weights';
 $string['course_name'] = 'Course Name';
