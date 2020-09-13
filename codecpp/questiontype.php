@@ -277,6 +277,10 @@ class qtype_codecpp extends question_type
         $service_data = array();
         $editable = qtype_codecpp::find_editable($question->questiontext);
         for ($idx = 0; $idx < count($editable); $idx++) {
+            if ($form->edit[$idx] == '0') {
+                $service_data[$idx] = '';
+                continue;
+            }
             $optype = rtrim($editable[$idx][5]);
             switch ($optype) {
                 case "integer":
@@ -293,7 +297,9 @@ class qtype_codecpp extends question_type
                     break;
 
                 case "text":
-                    $service_data[$idx] = $this->join_form_data($form->selectedoptions[$idx], $string_ops);
+                    $service_data[$idx] = sprintf("%s;%s",
+                        $form->stringoptions[$idx]['range'],
+                        $this->join_form_data($form->stringoptions[$idx], $string_ops));
                     break;
             }
         }

@@ -243,6 +243,22 @@ class KeyLocation:
     def set_extra_info(self, line):
         self.extra_info = line
 
+    def generate_numbers(self, options):
+        splitted = options.split(",")
+        numbers = list()
+        excluded = set()
+        for s in splitted:
+            if KeyLocation.re_value.match(s):
+                numbers.append(int(s))
+            elif KeyLocation.re_range.match(s):
+                splitted_range = s.split(':')
+                for val in range(int(splitted_range[0]), int(splitted_range[1]) + 1):
+                    numbers.append(val)
+            elif KeyLocation.re_exclude.match(s):
+                excluded.add(int(s[1:]))
+
+        return [n for n in numbers if n not in excluded]
+
     def generate_variation(self):
         if self.location_type == "binary_op" or self.location_type == "logical":
             if self.extra_info == "":
@@ -253,20 +269,7 @@ class KeyLocation:
             # TODO VVV implement for float
             if self.extra_info == "":
                 return self.value
-            splitted = self.extra_info.split(",")
-            numbers = list()
-            excluded = set()
-            for s in splitted:
-                if KeyLocation.re_value.match(s):
-                    numbers.append(int(s))
-                elif KeyLocation.re_range.match(s):
-                    splitted_range = s.split(':')
-                    for val in range(int(splitted_range[0]), int(splitted_range[1])):
-                        numbers.append(val)
-                elif KeyLocation.re_exclude.match(s):
-                    excluded.add(int(s[1:]))
-
-            numbers = [n for n in numbers if n not in excluded]
+            numbers = self.generate_numbers(self.extra_info)
             return str(choice(numbers))
 
         if self.location_type == "float":
@@ -279,17 +282,27 @@ class KeyLocation:
         if self.location_type == "text":
             if self.extra_info == "":
                 return self.value
-            choices = list()
+
             splitted = self.extra_info.split(";")
+            range_str = splitted[0]
+            # it is intentionally -2 to calculate "" in string
+            numbers = [len(self.value) - 2]
+            if len(range_str) != 0:
+                numbers = self.generate_numbers(range_str)
+
+            characters = list()
+            # leave out the range
+            splitted = splitted[1:]
             for s in splitted:
                 if s == "lowercase":
-                    choices.extend(string.ascii_lowercase)
+                    characters.extend(string.ascii_lowercase)
                 elif s == "uppercase":
-                    choices.extend(string.ascii_uppercase)
+                    characters.extend(string.ascii_uppercase)
                 elif s == "digits":
-                    choices.extend(string.digits)
-            random_text = ''.join([choice(choices) for _ in range(len(self.value) - 2)])
+                    characters.extend(string.digits)
+            random_text = ''.join([choice(characters) for _ in range(choice(numbers))])
             return ''.join([self.value[0], random_text, self.value[-1]])
+
         return self.value
 
 
@@ -354,5 +367,5 @@ def generate_variation(code, edit):
                 'new_source_code': new_source_code,
                 'output': output[new_source_code]
             })
-            # print(new_source_code)
+            print(new_source_code)
     return return_list

@@ -31,13 +31,14 @@ $settings = null;
 if (is_siteadmin()) {
     $ADMIN->add('qtypesettings', new admin_category('qtype_codecpp_category', get_string('pluginname', 'qtype_codecpp')));
 
-    $ADMIN->add('qtype_codecpp_category',
-        new admin_externalpage(
-            'qtype_codecpp_updateweigths',
-            get_string('update_weights', 'qtype_codecpp'),
-            new moodle_url('/question/type/codecpp/admin_update_weights.php'),
-            'moodle/site:config'
-        ));
+//    // TODO WIP This needs to be implemented on the service side for updating the weights
+//    $ADMIN->add('qtype_codecpp_category',
+//        new admin_externalpage(
+//            'qtype_codecpp_updateweigths',
+//            get_string('update_weights', 'qtype_codecpp'),
+//            new moodle_url('/question/type/codecpp/admin_update_weights.php'),
+//            'moodle/site:config'
+//        ));
 
     $ADMIN->add('qtype_codecpp_category',
         new admin_externalpage(
