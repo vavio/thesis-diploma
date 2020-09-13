@@ -77,7 +77,7 @@ class question_dataset_dependent_definitions_form extends question_wizard_form {
             $edit_type = rtrim($datasetentry[5]);
             if (strcmp($edit_type, "integer") == 0 || strcmp($edit_type, "float") == 0){
                 $mform->addElement('text', "range[{$idx}]", get_string('range_text', 'qtype_codecpp'));
-                $mform->addHelpButton("range[{$idx}]", 'range_text_explanation', 'qtype_codecpp');
+                $mform->addHelpButton("range[{$idx}]", 'range_text', 'qtype_codecpp');
                 $mform->setType("range[{$idx}]", PARAM_TEXT);
                 continue;
             }
