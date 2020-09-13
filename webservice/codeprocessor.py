@@ -149,9 +149,13 @@ class CodeProcessor:
 
     # DFS
     def _extract_key_kinds_from_tree(self, node):
+        if node.extent.start.file is not None and str(node.extent.start.file) != self._source_code_filename():
+            return list()
+
+        if node.kind == clang.cindex.CursorKind.RETURN_STMT:
+            return list()
+
         result = list()
-        if str(node.extent.start.file) != self._source_code_filename() and node.extent.start.file is not None:
-            return result
         if node.kind == clang.cindex.CursorKind.INTEGER_LITERAL:
             result.append(
                 ((node.extent.start.line, node.extent.start.column),
@@ -175,7 +179,7 @@ class CodeProcessor:
                      info[0],
                      'logical')
                 )
-        elif node.kind in {clang.cindex.CursorKind.STRING_LITERAL, clang.cindex.CursorKind.CHARACTER_LITERAL}:
+        elif node.kind in {clang.cindex.CursorKind.STRING_LITERAL, clang.cindex.CursorKind.CHARACTER_LITERAL}:  # TODO VVV fix character
             result.append(
                 ((node.extent.start.line, node.extent.start.column),
                  (node.extent.end.line, node.extent.end.column),
@@ -189,8 +193,23 @@ class CodeProcessor:
                  list(node.get_tokens())[0].spelling,
                  'float')
             )
-        for child in node.get_children():
+
+        for (idx, child) in enumerate(node.get_children()):
+            if node.kind == clang.cindex.CursorKind.CALL_EXPR:
+                name = node.displayname
+                if (name == 'printf' or name == 'scanf') and idx < 2 :
+                    # first child is the name printf/scanf
+                    # second child is the formatting string
+                    continue
+
+                if (name == 'fprintf' or name == 'fscanf') and idx < 3:
+                    # first child is the name fprintf/fscanf
+                    # second child is the file pointer
+                    # third child is the formatting string
+                    continue
+
             result.extend(self._extract_key_kinds_from_tree(child))
+
         return result
 
     def _extract_ast(self):
