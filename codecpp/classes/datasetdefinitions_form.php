@@ -104,7 +104,7 @@ class question_dataset_dependent_definitions_form extends question_wizard_form {
                 continue;
             }
 
-            if (strcmp($edit_type, "logical") == 0){
+            if (strcmp($edit_type, "logical") == 0) {
                 $checkboxes = [
                     $mform->createElement('advcheckbox', "andoperator", "", "&&"),
                     $mform->createElement('advcheckbox', "oroperator", "", "||")
@@ -115,16 +115,21 @@ class question_dataset_dependent_definitions_form extends question_wizard_form {
                 continue;
             }
 
-            if (strcmp($edit_type, "text") == 0){
-                $checkboxes = [
-                    $mform->createElement('text', "range", get_string('string_range', 'qtype_codecpp')),
+            if (strcmp($edit_type, "text") == 0 || strcmp($edit_type, "character") == 0) {
+                $checkboxes = array();
+                if (strcmp($edit_type, "text") == 0){
+                    $checkboxes[] = $mform->createElement('text', "range", get_string('string_range', 'qtype_codecpp'));
+                }
+
+                $checkboxes += array_merge($checkboxes, [
                     $mform->createElement('advcheckbox', "lowercase", "", get_string('lowercase_letters', 'qtype_codecpp')),
                     $mform->createElement('advcheckbox', "uppercase", "", get_string('uppercase_letters', 'qtype_codecpp')),
                     $mform->createElement('advcheckbox', "digits", "", get_string('digits', 'qtype_codecpp'))
-                ];
-                $mform->addGroup($checkboxes, "stringoptions[{$idx}]", get_string('text_options', 'qtype_codecpp'));
-                $mform->setType("stringoptions[{$idx}][range]", PARAM_TEXT);
-                $mform->hideIf("stringoptions[{$idx}]", "edit[{$idx}]",'neq', '1');
+                ]);
+
+                $mform->addGroup($checkboxes, "textoptions[{$idx}]", get_string('text_options', 'qtype_codecpp'));
+                $mform->setType("textoptions[{$idx}][range]", PARAM_TEXT);
+                $mform->hideIf("textoptions[{$idx}]", "edit[{$idx}]",'neq', '1');
                 continue;
             }
         }
@@ -187,8 +192,8 @@ class question_dataset_dependent_definitions_form extends question_wizard_form {
             }
         }
 
-        // range for string length
-        foreach ($data['stringoptions'] as $idx => $value) {
+        // range for text length
+        foreach ($data['textoptions'] as $idx => $value) {
             if ($data['edit'][$idx] == '0') {
                 continue;
             }
@@ -198,7 +203,7 @@ class question_dataset_dependent_definitions_form extends question_wizard_form {
             }
 
             if (!$this->is_valid_range($value['range'])) {
-                $errors["stringoptions[{$idx}]"] = get_string('range_error', 'qtype_codecpp');
+                $errors["textoptions[{$idx}]"] = get_string('range_error', 'qtype_codecpp');
             }
         }
 

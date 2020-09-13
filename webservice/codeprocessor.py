@@ -179,12 +179,12 @@ class CodeProcessor:
                      info[0],
                      'logical')
                 )
-        elif node.kind in {clang.cindex.CursorKind.STRING_LITERAL, clang.cindex.CursorKind.CHARACTER_LITERAL}:  # TODO VVV fix character
+        elif node.kind in {clang.cindex.CursorKind.STRING_LITERAL, clang.cindex.CursorKind.CHARACTER_LITERAL}:
             result.append(
                 ((node.extent.start.line, node.extent.start.column),
                  (node.extent.end.line, node.extent.end.column),
                  list(node.get_tokens())[0].spelling,
-                 'text')
+                 'text' if node.kind == clang.cindex.CursorKind.STRING_LITERAL else 'character')
             )
         elif node.kind == clang.cindex.CursorKind.FLOATING_LITERAL:
             result.append(
@@ -298,16 +298,15 @@ class KeyLocation:
             result = round(random() * (float(temp[1]) - float(temp[0])) + float(temp[0]), 2)
             return str(result)
 
-        if self.location_type == "text":
+        if self.location_type in {"text", "character"}:
             if self.extra_info == "":
                 return self.value
 
             splitted = self.extra_info.split(";")
-            range_str = splitted[0]
-            # it is intentionally -2 to calculate "" in string
-            numbers = [len(self.value) - 2]
-            if len(range_str) != 0:
-                numbers = self.generate_numbers(range_str)
+            numbers = self.generate_numbers(splitted[0])
+            if len(numbers) == 0:
+                # it is intentionally -2 to calculate "" or '' in the value
+                numbers = [len(self.value) - 2]
 
             characters = list()
             # leave out the range

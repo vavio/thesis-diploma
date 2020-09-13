@@ -297,9 +297,10 @@ class qtype_codecpp extends question_type
                     break;
 
                 case "text":
+                case "character":
                     $service_data[$idx] = sprintf("%s;%s",
-                        $form->stringoptions[$idx]['range'],
-                        $this->join_form_data($form->stringoptions[$idx], $string_ops));
+                        $form->textoptions[$idx]['range'],
+                        $this->join_form_data($form->textoptions[$idx], $string_ops));
                     break;
             }
         }
