@@ -1,1 +1,15 @@
-<svg xmlns="http://www.w3.org/2000/svg" style="isolation:isolate" width="16" height="16" preserveAspectRatio="xMinYMid meet"><defs><clipPath id="a"><path d="M0 0h16v16H0z"/></clipPath></defs><g clip-path="url(#a)"><path d="M10 8a2 2 0 1 1 4.001.001A2 2 0 0 1 10 8zM2 8a2 2 0 1 1 4.001.001A2 2 0 0 1 2 8z"/></g></svg>
+<svg width="16" height="16" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMinYMid meet">
+ <defs>
+  <clipPath id="a">
+   <path id="svg_1" d="m0,0l16,0l0,16l-16,0l0,-16z"/>
+  </clipPath>
+ </defs>
+ <g>
+  <title>background</title>
+  <rect fill="none" id="canvas_background" height="602" width="802" y="-1" x="-1"/>
+ </g>
+ <g>
+  <title>Layer 1</title>
+  <text xml:space="preserve" text-anchor="start" font-family="Helvetica, Arial, sans-serif" font-size="8" id="svg_4" y="10.16825" x="0.43931" stroke-width="0" stroke="#000" fill="#000000">C++</text>
+ </g>
+</svg>
