@@ -72,7 +72,26 @@ class attempts_data
             $idx++;
         }
 
-        // TODO VVV get only data with correct attempts
+        foreach ($raw_data as $data) {
+            $state = $data['state'];
+            if ($state != question_state::$gradedwrong && $state != question_state::$mangrwrong) {
+                continue;
+            }
+
+            if ($state != question_state::$gradedpartial && $state != question_state::$mangrpartial) {
+                continue;
+            }
+
+            // answer is wrong
+            $removed_count = 0;
+            foreach (array_keys($attempt_data) as $key) {
+                if (strcmp($attempt_data[$key - $removed_count]['slot'], $data['slot']) === 0) {
+                    unset($attempt_data[$key]);
+                    $attempt_data = array_values($attempt_data);
+                    $removed_count++;
+                }
+            }
+        }
 
         // Add the difficulty of the variation to the $attempt_data
         foreach ($attempt_data as &$data) {
