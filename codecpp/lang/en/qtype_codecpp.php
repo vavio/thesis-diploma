@@ -63,6 +63,9 @@ $string['max_time'] = 'Maximum response time /s';
 $string['standard_deviation'] = 'Standard deviation';
 $string['download_csv'] = 'Download CSV file with response data';
 
+$string['view_variations'] = 'CodeCPP view question variations';
+$string['variations'] = 'Question variations';
+
 $string['update_weights'] = 'CodeCPP update weights';
 $string['course_name'] = 'Course Name';
 $string['attempts_count'] = 'Number of attempts';

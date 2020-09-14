@@ -42,6 +42,14 @@ if (is_siteadmin()) {
 
     $ADMIN->add('qtype_codecpp_category',
         new admin_externalpage(
+            'qtype_codecpp_viewvariations',
+            get_string('view_variations', 'qtype_codecpp'),
+            new moodle_url('/question/type/codecpp/admin_view_variations.php'),
+            'moodle/site:config'
+        ));
+
+    $ADMIN->add('qtype_codecpp_category',
+        new admin_externalpage(
             'qtype_codecpp_showquestiondata',
             get_string('show_question_data', 'qtype_codecpp'),
             new moodle_url('/question/type/codecpp/admin_show_question_data.php'),
