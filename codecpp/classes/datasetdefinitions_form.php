@@ -68,19 +68,27 @@ class question_dataset_dependent_definitions_form extends question_wizard_form {
                 continue;
             }
 
-//            $mform->addElement('header', "header[{$idx}]", "Element ".(string)($idx + 1));
             $mform->addElement('header', "header[{$idx}]", '');
 
             $mform->addElement('html', $this->get_code_label($datasetentry));
             $mform->addElement('advcheckbox', "edit[{$idx}]", get_string('edit_element', 'qtype_codecpp'));
 
             $edit_type = rtrim($datasetentry[5]);
-            if (strcmp($edit_type, "integer") == 0 || strcmp($edit_type, "float") == 0){
-                $mform->addElement('text', "range[{$idx}]", get_string('range_text', 'qtype_codecpp'));
-                $mform->addHelpButton("range[{$idx}]", 'range_text', 'qtype_codecpp');
-                $mform->setType("range[{$idx}]", PARAM_TEXT);
+            if (strcmp($edit_type, "integer") == 0){
+                $mform->addElement('text', "int_range[{$idx}]", get_string('int_range', 'qtype_codecpp'));
+                $mform->addHelpButton("int_range[{$idx}]", 'int_range', 'qtype_codecpp');
+                $mform->setType("int_range[{$idx}]", PARAM_TEXT);
 
-                $mform->hideIf("range[{$idx}]", "edit[{$idx}]",'neq', '1');
+                $mform->hideIf("int_range[{$idx}]", "edit[{$idx}]",'neq', '1');
+                continue;
+            }
+
+            if (strcmp($edit_type, "float") == 0){
+                $mform->addElement('text', "float_range[{$idx}]", get_string('float_range', 'qtype_codecpp'));
+                $mform->addHelpButton("float_range[{$idx}]", 'float_range', 'qtype_codecpp');
+                $mform->setType("float_range[{$idx}]", PARAM_TEXT);
+
+                $mform->hideIf("float_range[{$idx}]", "edit[{$idx}]",'neq', '1');
                 continue;
             }
 
@@ -100,6 +108,8 @@ class question_dataset_dependent_definitions_form extends question_wizard_form {
                 ];
 
                 $mform->addGroup($checkboxes, "selectedoptions[{$idx}]", get_string('binary_operators', 'qtype_codecpp'));
+                $mform->addHelpButton("selectedoptions[{$idx}]", 'binary_operators', 'qtype_codecpp');
+
                 $mform->hideIf("selectedoptions[{$idx}]", "edit[{$idx}]",'neq', '1');
                 continue;
             }
@@ -110,8 +120,9 @@ class question_dataset_dependent_definitions_form extends question_wizard_form {
                     $mform->createElement('advcheckbox', "oroperator", "", "||")
                ];
                 $mform->addGroup($checkboxes, "selectedoptions[{$idx}]", get_string('logical_operators', 'qtype_codecpp'));
-                $mform->hideIf("selectedoptions[{$idx}]", "edit[{$idx}]",'neq', '1');
+                $mform->addHelpButton("selectedoptions[{$idx}]", 'logical_operators', 'qtype_codecpp');
 
+                $mform->hideIf("selectedoptions[{$idx}]", "edit[{$idx}]",'neq', '1');
                 continue;
             }
 
@@ -129,6 +140,8 @@ class question_dataset_dependent_definitions_form extends question_wizard_form {
 
                 $mform->addGroup($checkboxes, "textoptions[{$idx}]", get_string('text_options', 'qtype_codecpp'));
                 $mform->setType("textoptions[{$idx}][range]", PARAM_TEXT);
+                $mform->addHelpButton("textoptions[{$idx}]", 'text_options', 'qtype_codecpp');
+
                 $mform->hideIf("textoptions[{$idx}]", "edit[{$idx}]",'neq', '1');
                 continue;
             }
@@ -182,17 +195,28 @@ class question_dataset_dependent_definitions_form extends question_wizard_form {
         $errors = parent::validation($data, $files);
 
         // range for int and float validation
-        foreach ($data['range'] as $idx => $value) {
+        foreach ($data['int_range'] as $idx => $value) {
             if ($data['edit'][$idx] == '0') {
                 continue;
             }
 
             if (!$this->is_valid_range($value)) {
-                $errors["range[{$idx}]"] = get_string('range_error', 'qtype_codecpp');
+                $errors["int_range[{$idx}]"] = get_string('range_error', 'qtype_codecpp');
             }
         }
 
-        // range for text length
+        // range for float validation
+        foreach ($data['float_range'] as $idx => $value) {
+            if ($data['edit'][$idx] == '0') {
+                continue;
+            }
+
+            if (!$this->is_valid_float_range($value)) {
+                $errors["float_range[{$idx}]"] = get_string('range_error', 'qtype_codecpp');
+            }
+        }
+
+        // range for text length validation
         foreach ($data['textoptions'] as $idx => $value) {
             if ($data['edit'][$idx] == '0') {
                 continue;
@@ -218,11 +242,19 @@ class question_dataset_dependent_definitions_form extends question_wizard_form {
         $splitted = explode(",", $value);
 
         foreach ($splitted as $s) {
-            if (!preg_match('/(^-?\d+$|^-?\d+:-?\d+$|^\^-?\d)/m', $s)) {
+            if (!preg_match('/(^[-+]?\d+$|^[-+]?\d+:-?\d+$|^\^[-+]?\d)/m', $s)) {
                 return false;
             }
         }
 
         return true;
+    }
+
+    private function is_valid_float_range($value) {
+        if (strlen($value) == 0) {
+            return true;
+        }
+
+        return preg_match('/^[-+]?\d+(\.?\d+)?:[-+]?\d+(\.?\d+)?$/m', $value);
     }
 }

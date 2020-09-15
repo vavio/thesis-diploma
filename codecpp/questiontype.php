@@ -284,8 +284,11 @@ class qtype_codecpp extends question_type
             $optype = rtrim($editable[$idx][5]);
             switch ($optype) {
                 case "integer":
+                    $service_data[$idx] = $form->int_range[$idx];
+                    break;
+
                 case "float":
-                    $service_data[$idx] = $form->range[$idx];
+                    $service_data[$idx] = $form->float_range[$idx];
                     break;
 
                 case "binary_op":

@@ -279,28 +279,23 @@ class KeyLocation:
         return [n for n in numbers if n not in excluded]
 
     def generate_variation(self):
-        if self.location_type == "binary_op" or self.location_type == "logical":
-            if self.extra_info == "":
-                return self.value
+        if self.extra_info == "":
+            return self.value
+
+        if self.location_type in {"binary_op", "logical"}:
             return choice(self.extra_info.split(";"))
 
         if self.location_type == "integer":
-            # TODO VVV implement for float
-            if self.extra_info == "":
-                return self.value
             numbers = self.generate_numbers(self.extra_info)
             return str(choice(numbers))
 
         if self.location_type == "float":
-            if self.extra_info == "":
-                return self.value
-            temp = self.extra_info.split(";")
-            result = round(random() * (float(temp[1]) - float(temp[0])) + float(temp[0]), 2)
-            return str(result)
+            temp = self.extra_info.split(":")
+            minr = min(float(temp[0]), float(temp[1]))
+            maxr = max(float(temp[0]), float(temp[1]))
+            return str(round(random() * (maxr - minr) + minr, 2))
 
         if self.location_type in {"text", "character"}:
-            if self.extra_info == "":
-                return self.value
 
             splitted = self.extra_info.split(";")
             numbers = self.generate_numbers(splitted[0])
