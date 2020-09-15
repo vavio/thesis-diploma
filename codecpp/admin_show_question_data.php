@@ -64,11 +64,11 @@ if ($questionid && confirm_sesskey()) {
     $labels = array();
 
     foreach ($statistic as $k => $s) {
-        $avg_data[] = array_sum($s['times']) / count($s['times']);
-        $std_dev[] = stats_standard_deviation($s['times']);
-        $data_count[] = count($s['times']);
-        $min_data[] = min($s['times']);
-        $max_data[] = max($s['times']);
+        $data_count[] = $s['attempt_count'];
+        $avg_data[] = $s['average_response_time'];
+        $std_dev[] = $s['std_dev'];
+        $min_data[] = $s['min_response_time'];
+        $max_data[] = $s['max_response_time'];
         $diff_data[] = $s['difficulty'];
         $labels[] = 'Variation ' . ($k + 1);
     }
@@ -270,14 +270,33 @@ function get_attemp_data($questionid) {
         return (double)$a['difficulty'] - (double)$b['difficulty'];
     });
 
+    foreach ($statistic as $k => &$s) {
+        $count = count($s['times']);
+
+        $s['attempt_count'] = $count;
+        $s['average_response_time'] = array_sum($s['times']) / $count;
+        $s['std_dev'] = stats_standard_deviation($s['times']);
+        $s['min_response_time'] = min($s['times']);
+        $s['max_response_time'] = max($s['times']);
+    }
+
     return $statistic;
 }
 
 function generate_download_file($question_name, $statistic, $questionid) {
-    $content = "variation_id,calculated_difficulty,response1;response2;....;responseN\n";
+    $content = "variation_id,calculated_difficulty,attempt_count,average_response_time,std_dev,min_response_time,max_response_time,response_time1;response_time2;....;response_timeN\n";
+
     foreach ($statistic as $k => $s) {
-        $content .= sprintf("%d,%s,%s\n", $k + 1, $s['difficulty'], join(";", $s['times']));
+        $content .= sprintf("%d,%.5f,%d,%.5f,%.5f,%d,%d,%s\n",
+            $k + 1, // variation_id
+            $s['difficulty'],
+            $s['attempt_count'],
+            $s['average_response_time'],
+            $s['std_dev'],
+            $s['min_response_time'],
+            $s['max_response_time'],
+            join(";", $s['times']));
     }
-    $filename = sprintf("response_times_%s_%d-%s.csv", $question_name, $questionid, date("Ymd"));
+    $filename = sprintf("moodle_codecpp_response_times_%s_%d-%s.csv", $question_name, $questionid, date("Ymd"));
     send_file($content, $filename, 0, 0, true, true, 'text/csv');
 }
