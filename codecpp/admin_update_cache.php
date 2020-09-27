@@ -26,7 +26,7 @@
 
 require_once('../../../config.php');
 require_once('./questiontype.php');
-require_once('./classes/quiz_cache.php');
+require_once('./classes/codecpp_quiz_cache.php');
 require_once($CFG->libdir . '/tablelib.php');
 require_once($CFG->libdir . '/adminlib.php');
 require_once($CFG->libdir . '/xmlize.php');
@@ -42,9 +42,12 @@ $thispageurl = new moodle_url('/question/type/codecpp/admin_update_cache.php');
 // Accept.
 if ($quizid && confirm_sesskey()) {
     throw_if_quiz($quizid);
-    $title = get_string('previewquestion', 'question',
-        sprintf("%s, Difficulty: %.2f", format_string($question->name), $question->difficulty));
-    redirect($thispageurl, sprintf(get_string('cache_updated_success', 'qtype_codecpp'), $quizname));
+
+    codecpp_quiz_cache::update_cache($quizid);
+
+    $quiz_name = $DB->get_record('quiz', array('id' => $quizid), 'name')->name;
+    $update_message = get_string('cache_updated_success', 'qtype_codecpp', $quiz_name);
+    redirect($thispageurl, $update_message);
     return;
 }
 
@@ -64,9 +67,9 @@ $table->set_attribute('id', 'codecpp_caches');
 $table->set_attribute('class', 'admintable generaltable');
 $table->setup();
 
-$quiz_data = quiz_cache::get_quiz_with_codecpp();
+$quiz_data = codecpp_quiz_cache::get_quiz_data_codecpp();
 
-foreach ($quiz_data as &$quiz) {
+foreach ($quiz_data as $quiz) {
     $row = array();
 
     $courseurl = new moodle_url('/course/view.php', array('id' => $quiz->course_id));

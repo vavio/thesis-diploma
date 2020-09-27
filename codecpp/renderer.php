@@ -24,7 +24,7 @@
 
 
 defined('MOODLE_INTERNAL') || die();
-
+require_once($CFG->dirroot . '/question/type/codecpp/classes/codecpp_quiz_cache.php');
 
 /**
  * Generates the output for CodeCPP questions.
@@ -37,11 +37,12 @@ class qtype_codecpp_renderer extends qtype_renderer {
     public function formulation_and_controls(question_attempt $qa,
             question_display_options $options) {
         $question = $qa->get_question();
+        $question_id = $qa->get_last_qt_var('_qid_');
         $currentanswer = $qa->get_last_qt_var('answer');
         $currenttext = $qa->get_last_qt_var('_qtext_');
         $qa->questiontext = $currenttext;
 
-        $inputname = $qa->get_qt_field_name('answer');
+        $inputname = $qa->get_qt_field_name('_qans_');
         $inputattributes = array(
             'type' => 'text',
             'name' => $inputname,
@@ -56,10 +57,14 @@ class qtype_codecpp_renderer extends qtype_renderer {
         }
 
         $feedbackimg = '';
+
         $questiontext = $this->format_newquestiontext($qa, $currenttext);
         $input = html_writer::empty_tag('input', $inputattributes) . $feedbackimg;
+
 //        $result = html_writer::tag('div', $questiontext, array('class' => 'qtext'));
-        $result = html_writer::img('data:image/png;base64,' . $this->generate_image($currenttext),
+
+        $text_image = codecpp_quiz_cache::get_text_image($question_id);
+        $result = html_writer::img('data:image/png;base64,' . $text_image,
             'qtext', array('class' => 'qtext'));
         $result .= html_writer::start_div('ablock form-inline');
         $result .= html_writer::label(get_string('answercolon', 'qtype_codecpp'), $inputattributes['id']);
@@ -72,42 +77,6 @@ class qtype_codecpp_renderer extends qtype_renderer {
         }
 
         return $result;
-    }
-
-    private function generate_image($text) {
-        global $CFG;
-        $font = $CFG->dirroot . '/question/type/codecpp/fonts/JetBrainsMono-Regular.ttf';
-        $font_size = 12;
-        $line_height = $font_size + 10;
-        $padding = 10;
-        $lines = explode("\n", $text);
-
-        // Calculate the width of the image
-        $image_width = 0;
-        foreach ($lines as &$line) {
-            $size = imagettfbbox($font_size, 0, $font, $line);
-            $image_width = max($image_width, abs($size[0]) + abs($size[2]) + $padding);
-        }
-
-        $image_height = count($lines) * $line_height + $padding * 2;
-
-        $image = imagecreatetruecolor($image_width, $image_height);
-        imagealphablending($image, true);
-        imagesavealpha($image, true);
-
-        $textcolor = imagecolorallocate($image, 0, 0, 0); // TODO VVV add config
-        imagefill($image, 0, 0, 0x7fff0000);
-
-        $current_x = $line_height + $padding;
-        foreach($lines as &$line){
-            imagettftext($image, $font_size, 0, $padding, $current_x, $textcolor, $font, $line);
-            $current_x += $line_height;
-        }
-
-        ob_start();
-        imagepng($image);
-
-        return base64_encode(ob_get_clean());
     }
 
     public function format_newquestiontext($qa, $temp){

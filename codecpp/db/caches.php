@@ -15,18 +15,25 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Version information for the codecpp question type.
+ * Core cache definitions.
+ *
+ * This file is part of CodeCPP cache API
+ * It contains the components that are requried in order to use caching.
  *
  * @package    qtype_codecpp
  * @copyright  2020 onwards Valentin Ambaroski
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-defined('MOODLE_INTERNAL') || die();
-
-$plugin->component = 'qtype_codecpp';
-$plugin->version   = 2020092700;
-
-$plugin->requires  = 2020060900;
-
-$plugin->maturity  = MATURITY_BETA;
+$definitions = array(
+    // Used to generated image data for CodeCPP question variations
+    // The keys used are the codecpp_id.
+    // The static acceleration size has been based upon average of 15 CodeCPP questions with 30 variations each.
+    'question_images' => array(
+        'mode' => cache_store::MODE_APPLICATION,
+        'simplekeys' => true,
+        'simpledata' => false,
+        'staticacceleration' => true,
+        'staticaccelerationsize' => 450
+    )
+);
