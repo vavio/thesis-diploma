@@ -17,9 +17,9 @@
 /**
  * Admin settings for the codecpp question type.
  *
- * @package   qtype_codecpp
- * @copyright 2020 onwards Valentin Ambaroski
- * @license   http://opensource.org/licenses/mit-license The MIT License
+ * @package    qtype_codecpp
+ * @copyright  2020 onwards Valentin Ambaroski
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 defined('MOODLE_INTERNAL') || die();

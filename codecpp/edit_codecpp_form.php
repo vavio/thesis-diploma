@@ -15,14 +15,12 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Defines the editing form for the true-false question type.
+ * Defines the editing form for the CodeCPP question type.
  *
- * @package    qtype
- * @subpackage codecpp
- * @copyright  2007 Jamie Pratt
+ * @package    qtype_codecpp
+ * @copyright  2020 onwards Valentin Ambaroski
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-
 
 defined('MOODLE_INTERNAL') || die();
 

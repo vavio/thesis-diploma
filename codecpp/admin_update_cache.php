@@ -16,12 +16,12 @@
 
 /**
  *
- * Update weigths
+ * Update cache
  *
- * This is updating the constants which are used to calculate the code difficulty
- * @package   qtype_codecpp
+ * This is updating the cache for the question images
+ * @package    qtype_codecpp
  * @copyright  2020 onwards Valentin Ambaroski
- * @license   http://opensource.org/licenses/mit-license The MIT License
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 require_once('../../../config.php');
@@ -52,7 +52,7 @@ if ($quizid && confirm_sesskey()) {
 }
 
 echo $OUTPUT->header();
-echo $OUTPUT->heading(get_string('update_weights', 'qtype_codecpp'));
+echo $OUTPUT->heading(get_string('update_cache', 'qtype_codecpp'));
 echo $OUTPUT->box_start('generalbox', 'notice');
 
 $table = new flexible_table('qtype_codecpp_update_cache');

@@ -18,9 +18,8 @@
  * Defines the update weights result form for CodeCPP.
  *
  * @package    qtype_codecpp
- * @package   qtype_codecpp
  * @copyright  2020 onwards Valentin Ambaroski
- * @license   http://opensource.org/licenses/mit-license The MIT License
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 
