@@ -28,6 +28,7 @@ $string['choose_element'] = 'Choose element';
 $string['questiondatasets'] = 'CodeCPP question datasets';
 $string['questiondatasets_help'] = 'Select values or specify range for each variable which is in red';
 $string['pleaseselectananswer'] = 'Please select an answer.';
+$string['answercolon'] = 'Answer: ';
 $string['selectone'] = 'Select one:';
 $string['pluginname'] = 'CodeCPP';
 $string['source_code'] = 'Source Code';
@@ -82,6 +83,11 @@ $string['new_values'] = 'New values';
 $string['same_values'] = 'Same values';
 $string['accept_changes'] = 'Accept changes';
 $string['weights_updated_success'] = 'Successfully updated weights for %s';
+
+$string['update_cache'] = 'CodeCPP update cache';
+$string['cache_header'] = '';
+$string['generate_cache'] = 'Generate cache';
+$string['cache_updated_success'] = 'Successfully updated cache for quiz: {$a}';
 
 $string['use_http'] = 'Use HTTP';
 $string['use_http_text'] = 'When communicating with the service, should HTTP be used instead of HTTPS';

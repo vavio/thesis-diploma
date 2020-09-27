@@ -34,11 +34,19 @@ if (is_siteadmin()) {
 //    // TODO WIP This needs to be implemented on the service side for updating the weights
 //    $ADMIN->add('qtype_codecpp_category',
 //        new admin_externalpage(
-//            'qtype_codecpp_updateweigths',
+//            'qtype_codecpp_updateweights',
 //            get_string('update_weights', 'qtype_codecpp'),
 //            new moodle_url('/question/type/codecpp/admin_update_weights.php'),
 //            'moodle/site:config'
 //        ));
+
+    $ADMIN->add('qtype_codecpp_category',
+        new admin_externalpage(
+            'qtype_codecpp_updatecache',
+            get_string('update_cache', 'qtype_codecpp'),
+            new moodle_url('/question/type/codecpp/admin_update_cache.php'),
+            'moodle/site:config'
+        ));
 
     $ADMIN->add('qtype_codecpp_category',
         new admin_externalpage(
@@ -78,4 +86,6 @@ if (is_siteadmin()) {
     $settingspage->add(new admin_setting_configtext('qtype_codecpp/code_preview_lines',
         get_string('code_preview_lines', 'qtype_codecpp'),
         get_string('code_preview_lines_text', 'qtype_codecpp'), 1, PARAM_INT));
+
+    // TODO VVV add options for font size, font color, background color
 }
