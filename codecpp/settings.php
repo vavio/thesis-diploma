@@ -18,7 +18,7 @@
  * Admin settings for the codecpp question type.
  *
  * @package   qtype_codecpp
- * @copyright  2020 onwards Valentin Ambaroski
+ * @copyright 2020 onwards Valentin Ambaroski
  * @license   http://opensource.org/licenses/mit-license The MIT License
  */
 

@@ -17,9 +17,8 @@
 /**
  * Question type class for the CodeCPP question type.
  *
- * @package    qtype
- * @subpackage codecpp
- * @copyright  1999 onwards Martin Dougiamas  {@link http://moodle.com}
+ * @package    qtype_codecpp
+ * @copyright  2020 onwards Valentin Ambaroski
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 

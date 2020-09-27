@@ -15,11 +15,10 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * True-false question renderer class.
+ * CodeCPP question renderer class.
  *
- * @package    qtype
- * @subpackage codecpp
- * @copyright  2009 The Open University
+ * @package    qtype_codecpp
+ * @copyright  2020 onwards Valentin Ambaroski
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -30,11 +29,10 @@ defined('MOODLE_INTERNAL') || die();
 /**
  * Generates the output for CodeCPP questions.
  *
- * @copyright  2009 The Open University
+ * @package    qtype_codecpp
+ * @copyright  2020 onwards Valentin Ambaroski
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-
-
 class qtype_codecpp_renderer extends qtype_renderer {
     public function formulation_and_controls(question_attempt $qa,
             question_display_options $options) {

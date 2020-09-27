@@ -15,11 +15,10 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Short-answer question type upgrade code.
+ * CodeCPP question type upgrade code.
  *
- * @package    qtype
- * @subpackage shortanswer
- * @copyright  2011 The Open University
+ * @package    qtype_codecpp
+ * @copyright  2020 onwards Valentin Ambaroski
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 

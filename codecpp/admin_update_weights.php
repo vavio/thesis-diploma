@@ -33,7 +33,7 @@ require_once($CFG->libdir . '/adminlib.php');
 require_once($CFG->libdir . '/xmlize.php');
 require_once($CFG->libdir . '/questionlib.php');
 
-admin_externalpage_setup('qtype_codecpp_updateweigths');
+admin_externalpage_setup('qtype_codecpp_updateweights');
 
 $confirm = optional_param('confirm', 0, PARAM_BOOL);
 $quizid = optional_param('quizid', '', PARAM_INT);

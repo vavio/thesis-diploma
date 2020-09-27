@@ -18,7 +18,7 @@
  * Privacy Subsystem implementation for qtype_codecpp.
  *
  * @package    qtype_codecpp
- * @copyright  2018 Andrew Nicols <andrew@nicols.co.uk>
+ * @copyright  2020 onwards Valentin Ambaroski
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 

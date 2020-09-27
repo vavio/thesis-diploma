@@ -17,9 +17,8 @@
 /**
  * Serve question type files
  *
- * @since      Moodle 2.0
  * @package    qtype_codecpp
- * @copyright  2010 The Open Unviersity
+ * @copyright  2020 onwards Valentin Ambaroski
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 

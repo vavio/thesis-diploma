@@ -15,16 +15,15 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * @package    qtype
- * @subpackage codecpp
- * @copyright  2011 David Mudrak <david@moodle.com>
+ * @package    qtype_codecpp
+ * @copyright  2020 onwards Valentin Ambaroski
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 defined('MOODLE_INTERNAL') || die();
 
 /**
- * True/false question type conversion handler
+ * CodeCPP   question type conversion handler
  */
 class moodle1_qtype_codecpp_handler extends moodle1_qtype_handler {
 

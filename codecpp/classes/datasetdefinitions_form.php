@@ -1,11 +1,27 @@
 <?php
+// This file is part of Moodle - http://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+
+
 /**
  * Defines the editing form for the codecpp question data set definitions.
  *
  * @package    qtype
  * @subpackage codecpp
  * @copyright  2020 onwards Valentin Ambaroski
- * @license   http://opensource.org/licenses/mit-license The MIT License
+ * @license    http://opensource.org/licenses/mit-license The MIT License
  */
 
 defined('MOODLE_INTERNAL') || die();
@@ -195,39 +211,46 @@ class question_dataset_dependent_definitions_form extends question_wizard_form {
         $errors = parent::validation($data, $files);
 
         // range for int and float validation
-        foreach ($data['int_range'] as $idx => $value) {
-            if ($data['edit'][$idx] == '0') {
-                continue;
-            }
+        if (key_exists('int_range', $data)) {
 
-            if (!$this->is_valid_range($value)) {
-                $errors["int_range[{$idx}]"] = get_string('range_error', 'qtype_codecpp');
+            foreach ($data['int_range'] as $idx => $value) {
+                if ($data['edit'][$idx] == '0') {
+                    continue;
+                }
+
+                if (!$this->is_valid_range($value)) {
+                    $errors["int_range[{$idx}]"] = get_string('range_error', 'qtype_codecpp');
+                }
             }
         }
 
         // range for float validation
-        foreach ($data['float_range'] as $idx => $value) {
-            if ($data['edit'][$idx] == '0') {
-                continue;
-            }
+        if (key_exists('float_range', $data)) {
+            foreach ($data['float_range'] as $idx => $value) {
+                if ($data['edit'][$idx] == '0') {
+                    continue;
+                }
 
-            if (!$this->is_valid_float_range($value)) {
-                $errors["float_range[{$idx}]"] = get_string('range_error', 'qtype_codecpp');
+                if (!$this->is_valid_float_range($value)) {
+                    $errors["float_range[{$idx}]"] = get_string('range_error', 'qtype_codecpp');
+                }
             }
         }
 
         // range for text length validation
-        foreach ($data['textoptions'] as $idx => $value) {
-            if ($data['edit'][$idx] == '0') {
-                continue;
-            }
+        if (key_exists('textoptions', $data)) {
+            foreach ($data['textoptions'] as $idx => $value) {
+                if ($data['edit'][$idx] == '0') {
+                    continue;
+                }
 
-            if (!array_key_exists('range', $value)) {
-                continue;
-            }
+                if (!array_key_exists('range', $value)) {
+                    continue;
+                }
 
-            if (!$this->is_valid_range($value['range'])) {
-                $errors["textoptions[{$idx}]"] = get_string('range_error', 'qtype_codecpp');
+                if (!$this->is_valid_range($value['range'])) {
+                    $errors["textoptions[{$idx}]"] = get_string('range_error', 'qtype_codecpp');
+                }
             }
         }
 

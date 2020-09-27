@@ -17,9 +17,9 @@
 /**
  * Upgrade library code for the codecpp question type.
  *
- * @package    qtype
- * @subpackage codecpp
- * @copyright  2010 The Open University
+ *
+ * @package    qtype_codecpp
+ * @copyright  2020 onwards Valentin Ambaroski
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
