@@ -68,18 +68,18 @@ if (is_siteadmin()) {
     $settingspage = new admin_settingpage('codecppsetting' , get_string('settings'));
     $ADMIN->add('qtype_codecpp_category', $settingspage);
 
+    // Service endpoint
     $settingspage->add(new admin_setting_configcheckbox('qtype_codecpp/use_http',
         get_string('use_http', 'qtype_codecpp'),
         get_string('use_http_text', 'qtype_codecpp'), 1));
-
     $settingspage->add(new admin_setting_configtext('qtype_codecpp/servicehost',
         get_string('servicehost', 'qtype_codecpp'),
         get_string('servicehost_text', 'qtype_codecpp'), '0.0.0.0', PARAM_HOST));
-
     $settingspage->add(new admin_setting_configtext('qtype_codecpp/serviceport',
         get_string('serviceport', 'qtype_codecpp'),
         get_string('serviceport_text', 'qtype_codecpp'), 5000, PARAM_INT));
 
+    // Edit form settings
     $settingspage->add(new admin_setting_configcheckbox('qtype_codecpp/show_code_preview',
         get_string('show_code_preview', 'qtype_codecpp'),
         get_string('show_code_preview_text', 'qtype_codecpp'), 1));
@@ -87,5 +87,17 @@ if (is_siteadmin()) {
         get_string('code_preview_lines', 'qtype_codecpp'),
         get_string('code_preview_lines_text', 'qtype_codecpp'), 1, PARAM_INT));
 
-    // TODO VVV add options for font size, font color, background color
+    // Text image settings
+    $settingspage->add(new admin_setting_configcheckbox('qtype_codecpp/text_image',
+        get_string('text_image', 'qtype_codecpp'),
+        get_string('text_image_text', 'qtype_codecpp'), 1));
+    $settingspage->add(new admin_setting_configtext('qtype_codecpp/font_size',
+        get_string('font_size', 'qtype_codecpp'),
+        get_string('font_size_text', 'qtype_codecpp'), 12, PARAM_INT));
+    $settingspage->add(new admin_setting_configtext('qtype_codecpp/padding',
+        get_string('padding', 'qtype_codecpp'),
+        get_string('padding_text', 'qtype_codecpp'), 10, PARAM_INT));
+    $settingspage->add(new admin_setting_configtext('qtype_codecpp/text_color',
+        get_string('text_color', 'qtype_codecpp'),
+        get_string('text_color_text', 'qtype_codecpp'), '0; 0; 0', PARAM_TEXT));
 }

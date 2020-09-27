@@ -60,19 +60,22 @@ class qtype_codecpp_renderer extends qtype_renderer {
 
         $questiontext = $this->format_newquestiontext($qa, $currenttext);
         $input = html_writer::empty_tag('input', $inputattributes) . $feedbackimg;
+        $result = html_writer::tag('div', $questiontext, array('class' => 'qtext'));
 
-//        $result = html_writer::tag('div', $questiontext, array('class' => 'qtext'));
+        $config = get_config('qtype_codecpp');
+        if ($config->text_image) {
+            $text_image = codecpp_quiz_cache::get_text_image($question_id);
+            $result = html_writer::img('data:image/png;base64,' . $text_image,
+                'qtext', array('class' => 'qtext'));
+        }
 
-        $text_image = codecpp_quiz_cache::get_text_image($question_id);
-        $result = html_writer::img('data:image/png;base64,' . $text_image,
-            'qtext', array('class' => 'qtext'));
         $result .= html_writer::start_div('ablock form-inline');
         $result .= html_writer::label(get_string('answercolon', 'qtype_codecpp'), $inputattributes['id']);
         $result .= html_writer::span($input, 'answer');
         $result .= html_writer::end_div();
         if ($qa->get_state() == question_state::$invalid) {
             $result .= html_writer::nonempty_tag('div',
-                    $question->get_validation_error(array('answer' => $currentanswer, 'unit' => $selectedunit)),
+                    $question->get_validation_error(array('answer' => $currentanswer)),
                     array('class' => 'validationerror'));
         }
 

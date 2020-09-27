@@ -433,18 +433,4 @@ class qtype_codecpp extends question_type
     {
         return 0;
     }
-
-    public function get_possible_responses($questiondata)
-    {
-         //TODO VVV fix
-        return array(
-            $questiondata->id => array(
-                0 => new question_possible_response(get_string('false', 'qtype_codecpp'),
-                    $questiondata->options->answers[$questiondata->options->falseanswer]->fraction),
-                1 => new question_possible_response(get_string('true', 'qtype_codecpp'),
-                    $questiondata->options->answers[$questiondata->options->trueanswer]->fraction),
-                null => question_possible_response::no_response()
-            )
-        );
-    }
 }

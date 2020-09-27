@@ -38,10 +38,11 @@ class codecpp_quiz_cache
         $question_ids = self::get_quiz_codecpp_questions($quizid);
         $data = array();
         foreach ($question_ids as $question) {
-            if ($cache->get($question->codecpp_id) !== false) {
-                // We have stored cache for this question, no need to recalculate it
-                continue;
-            }
+//            // Maybe we can add way to invalidate the cache when there are changes in settings
+//            if ($cache->get($question->codecpp_id) !== false) {
+//                // We have stored cache for this question, no need to recalculate it
+//                continue;
+//            }
 
             $data[$question->codecpp_id] = self::generate_image($question->question_text);
         }
@@ -76,10 +77,12 @@ class codecpp_quiz_cache
 
     private static function generate_image($text) {
         global $CFG;
+        $config = get_config('qtype_codecpp');
+
         $font = $CFG->dirroot . '/question/type/codecpp/fonts/JetBrainsMono-Regular.ttf';
-        $font_size = 12;
+        $font_size = $config->font_size;
         $line_height = $font_size + 10;
-        $padding = 10;
+        $padding = $config->padding;
         $lines = explode("\n", $text);
 
         // Calculate the width of the image
@@ -95,7 +98,12 @@ class codecpp_quiz_cache
         imagealphablending($image, true);
         imagesavealpha($image, true);
 
-        $textcolor = imagecolorallocate($image, 0, 0, 0); // TODO VVV add config
+        $textcolorconfig = self::parse_color_string($config->text_color);
+        $textcolor = imagecolorallocate(
+            $image,
+            $textcolorconfig->red,
+            $textcolorconfig->green,
+            $textcolorconfig->blue);
         imagefill($image, 0, 0, 0x7fff0000);
 
         $current_x = $line_height + $padding;
@@ -108,6 +116,15 @@ class codecpp_quiz_cache
         imagepng($image);
 
         return base64_encode(ob_get_clean());
+    }
+
+    private static function parse_color_string($rgbstring) {
+        $arr = explode(";", $rgbstring);
+        $ret = new stdClass();
+        $ret->red = intval($arr[0]);
+        $ret->green = intval($arr[1]);
+        $ret->blue = intval($arr[2]);
+        return $ret;
     }
 
     private static function get_quiz_codecpp_questions($quizid) {
