@@ -28,12 +28,12 @@
 $definitions = array(
     // Used to generated image data for CodeCPP question variations
     // The keys used are the codecpp_id.
-    // The static acceleration size has been based upon average of 15 CodeCPP questions with 30 variations each.
+    // The static acceleration size has been based upon average of 30 CodeCPP questions with 30 variations each.
     'question_images' => array(
         'mode' => cache_store::MODE_APPLICATION,
         'simplekeys' => true,
         'simpledata' => false,
         'staticacceleration' => true,
-        'staticaccelerationsize' => 450
+        'staticaccelerationsize' => 900
     )
 );

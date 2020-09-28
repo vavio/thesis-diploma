@@ -129,6 +129,18 @@ class question_dataset_dependent_definitions_form extends question_wizard_form {
                 continue;
             }
 
+            if (strcmp($edit_type, "unary_op") == 0) {
+                $checkboxes = [
+                    $mform->createElement('advcheckbox', "increment", "", "++"),
+                    $mform->createElement('advcheckbox', "decrement", "", "--")
+                ];
+                $mform->addGroup($checkboxes, "selectedoptions[{$idx}]", get_string('unary_operators', 'qtype_codecpp'));
+                $mform->addHelpButton("selectedoptions[{$idx}]", 'unary_operators', 'qtype_codecpp');
+
+                $mform->hideIf("selectedoptions[{$idx}]", "edit[{$idx}]",'neq', '1');
+                continue;
+            }
+
             if (strcmp($edit_type, "logical") == 0) {
                 $checkboxes = [
                     $mform->createElement('advcheckbox', "andoperator", "", "&&"),
@@ -160,6 +172,7 @@ class question_dataset_dependent_definitions_form extends question_wizard_form {
                 $mform->hideIf("textoptions[{$idx}]", "edit[{$idx}]",'neq', '1');
                 continue;
             }
+
         }
 
         $mform->addElement('submit', 'savechanges', "Save Changes");

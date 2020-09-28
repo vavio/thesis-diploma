@@ -29,9 +29,9 @@ require_once($CFG->libdir . '/questionlib.php');
 
 
 /**
- * The true-false question type class.
+ * The CodeCPP question type class.
  *
- * @copyright  1999 onwards Martin Dougiamas  {@link http://moodle.com}
+ * @copyright  2020 onwards Valentin Ambaroski
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class qtype_codecpp extends question_type
@@ -66,6 +66,12 @@ class qtype_codecpp extends question_type
         $result = $c->post(qtype_codecpp::get_service_url() . '/' . $path, $data);
 
         if ($c->get_errno()) {
+            throw new moodle_exception('err' . $path, 'qtype_codecpp', '',
+                array('url' => qtype_codecpp::get_service_url(), 'result' => $result), json_encode($data));
+        }
+
+        $code = $c->info['http_code'];
+        if ( $code > 300 || $code < 200) {
             throw new moodle_exception('err' . $path, 'qtype_codecpp', '',
                 array('url' => qtype_codecpp::get_service_url(), 'result' => $result), json_encode($data));
         }
@@ -271,6 +277,7 @@ class qtype_codecpp extends question_type
             'notequals' => '!='
         );
         $logical_ops = array('andoperator' => '&&', 'oroperator' => '||');
+        $unary_ops = array('increment' => '++', 'decrement' => '--');
         $string_ops = array('lowercase' => 'lowercase', 'uppercase' => 'uppercase', 'digits' => 'digits');
 
         $service_data = array();
@@ -292,6 +299,10 @@ class qtype_codecpp extends question_type
 
                 case "binary_op":
                     $service_data[$idx] = $this->join_form_data($form->selectedoptions[$idx], $binary_ops);
+                    break;
+
+                case "unary_op":
+                    $service_data[$idx] = $this->join_form_data($form->selectedoptions[$idx], $unary_ops);
                     break;
 
                 case "logical":

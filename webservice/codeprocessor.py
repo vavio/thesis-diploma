@@ -24,7 +24,7 @@ def get_unary_operation(node):
     tokens = list(node.get_tokens())
     for token in tokens:
         if token.spelling == '--' or token.spelling == '++' or token.spelling == '!':
-            return token.spelling
+            return token.spelling, token.extent.start.column, token.extent.end.column
 
 
 class ComplexityCalculator:
@@ -81,7 +81,7 @@ class ComplexityCalculator:
 
         key = None
 
-        if node.kind in {clang.cindex.CursorKind.BINARY_OPERATOR, clang.cindex.CursorKind.COMPOUND_ASSIGNMENT_OPERATOR} :
+        if node.kind in {clang.cindex.CursorKind.BINARY_OPERATOR, clang.cindex.CursorKind.COMPOUND_ASSIGNMENT_OPERATOR}:
             key = get_binary_operation(node)[0]
         elif node.kind == clang.cindex.CursorKind.UNARY_OPERATOR:
             key = get_unary_operation(node)
@@ -156,6 +156,7 @@ class CodeProcessor:
             return list()
 
         result = list()
+        # This whole method can be improved
         if node.kind == clang.cindex.CursorKind.INTEGER_LITERAL:
             result.append(
                 ((node.extent.start.line, node.extent.start.column),
@@ -193,6 +194,18 @@ class CodeProcessor:
                  list(node.get_tokens())[0].spelling,
                  'float')
             )
+        elif node.kind == clang.cindex.CursorKind.UNARY_OPERATOR:
+            info = get_unary_operation(node)
+            if info[0] in {'++', '--'}:
+                result.append(
+                    ((node.extent.start.line, info[1]),
+                     (node.extent.end.line, info[2]),
+                     info[0],
+                     'unary_op')
+                )
+            elif info[0] == '!':
+                # we will ignore the negation for now
+                pass
 
         for (idx, child) in enumerate(node.get_children()):
             if node.kind == clang.cindex.CursorKind.CALL_EXPR:
@@ -282,7 +295,7 @@ class KeyLocation:
         if self.extra_info == "":
             return self.value
 
-        if self.location_type in {"binary_op", "logical"}:
+        if self.location_type in {"binary_op", "unary_op", "logical"}:
             return choice(self.extra_info.split(";"))
 
         if self.location_type == "integer":
