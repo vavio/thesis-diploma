@@ -85,97 +85,163 @@ class question_dataset_dependent_definitions_form extends question_wizard_form {
 
             $mform->addElement('header', "header[{$idx}]", '');
 
-            $mform->addElement('html', $this->get_code_label($datasetentry));
-            $mform->addElement('advcheckbox', "edit[{$idx}]", get_string('edit_element', 'qtype_codecpp'));
-
             $edit_type = rtrim($datasetentry[5]);
-            if (strcmp($edit_type, "integer") == 0){
-                $mform->addElement('text', "int_range[{$idx}]", get_string('int_range', 'qtype_codecpp'));
-                $mform->addHelpButton("int_range[{$idx}]", 'int_range', 'qtype_codecpp');
-                $mform->setType("int_range[{$idx}]", PARAM_TEXT);
 
-                $mform->hideIf("int_range[{$idx}]", "edit[{$idx}]",'neq', '1');
-                continue;
+            $mform->addElement('html', $this->get_code_label($datasetentry));
+            $mform->addElement('advcheckbox', "edit[{$idx}]",
+                get_string('edit_element', 'qtype_codecpp', $this->getDescriptionForOp($edit_type)));
+
+            switch ($edit_type) {
+                case "integer":
+                    $this->addIntegerOptions($idx);
+                    break;
+
+                case "float":
+                    $this->addFloatOptions($idx);
+                    break;
+
+                case "binary_op":
+                    $this->addBinaryOptions($idx);
+                    break;
+
+                case "unary_op":
+                    $this->addUnaryOptions($idx);
+                    break;
+
+                case "logical":
+                    $this->addLogicalOptions($idx);
+                    break;
+
+                case "text":
+                    $this->addTextOptions($idx, true);
+                    break;
+
+                case "character":
+                    $this->addTextOptions($idx, false);
+                    break;
             }
 
-            if (strcmp($edit_type, "float") == 0){
-                $mform->addElement('text', "float_range[{$idx}]", get_string('float_range', 'qtype_codecpp'));
-                $mform->addHelpButton("float_range[{$idx}]", 'float_range', 'qtype_codecpp');
-                $mform->setType("float_range[{$idx}]", PARAM_TEXT);
-
-                $mform->hideIf("float_range[{$idx}]", "edit[{$idx}]",'neq', '1');
-                continue;
-            }
-
-            if (strcmp($edit_type, "binary_op") == 0){
-                $checkboxes = [
-                    $mform->createElement('advcheckbox', "multiplication", "", "*"),
-                    $mform->createElement('advcheckbox', "addition", "", "+"),
-                    $mform->createElement('advcheckbox', "subtraction", "", "-"),
-                    $mform->createElement('advcheckbox', "equals", "", "="),
-                    $mform->createElement('advcheckbox', "modulo", "", "%"),
-                    $mform->createElement('advcheckbox', "smallerorequal", "", "<="),
-                    $mform->createElement('advcheckbox', "smaller", "", "<"),
-                    $mform->createElement('advcheckbox', "biggerorequal", "", ">="),
-                    $mform->createElement('advcheckbox', "bigger", "", ">"),
-                    $mform->createElement('advcheckbox', "equalsequals", "", "=="),
-                    $mform->createElement('advcheckbox', "notequals", "", "!=")
-                ];
-
-                $mform->addGroup($checkboxes, "selectedoptions[{$idx}]", get_string('binary_operators', 'qtype_codecpp'));
-                $mform->addHelpButton("selectedoptions[{$idx}]", 'binary_operators', 'qtype_codecpp');
-
-                $mform->hideIf("selectedoptions[{$idx}]", "edit[{$idx}]",'neq', '1');
-                continue;
-            }
-
-            if (strcmp($edit_type, "unary_op") == 0) {
-                $checkboxes = [
-                    $mform->createElement('advcheckbox', "increment", "", "++"),
-                    $mform->createElement('advcheckbox', "decrement", "", "--")
-                ];
-                $mform->addGroup($checkboxes, "selectedoptions[{$idx}]", get_string('unary_operators', 'qtype_codecpp'));
-                $mform->addHelpButton("selectedoptions[{$idx}]", 'unary_operators', 'qtype_codecpp');
-
-                $mform->hideIf("selectedoptions[{$idx}]", "edit[{$idx}]",'neq', '1');
-                continue;
-            }
-
-            if (strcmp($edit_type, "logical") == 0) {
-                $checkboxes = [
-                    $mform->createElement('advcheckbox', "andoperator", "", "&&"),
-                    $mform->createElement('advcheckbox', "oroperator", "", "||")
-               ];
-                $mform->addGroup($checkboxes, "selectedoptions[{$idx}]", get_string('logical_operators', 'qtype_codecpp'));
-                $mform->addHelpButton("selectedoptions[{$idx}]", 'logical_operators', 'qtype_codecpp');
-
-                $mform->hideIf("selectedoptions[{$idx}]", "edit[{$idx}]",'neq', '1');
-                continue;
-            }
-
-            if (strcmp($edit_type, "text") == 0 || strcmp($edit_type, "character") == 0) {
-                $checkboxes = array();
-                if (strcmp($edit_type, "text") == 0){
-                    $checkboxes[] = $mform->createElement('text', "range", get_string('string_range', 'qtype_codecpp'));
-                }
-
-                $checkboxes += array_merge($checkboxes, [
-                    $mform->createElement('advcheckbox', "lowercase", "", get_string('lowercase_letters', 'qtype_codecpp')),
-                    $mform->createElement('advcheckbox', "uppercase", "", get_string('uppercase_letters', 'qtype_codecpp')),
-                    $mform->createElement('advcheckbox', "digits", "", get_string('digits', 'qtype_codecpp'))
-                ]);
-
-                $mform->addGroup($checkboxes, "textoptions[{$idx}]", get_string('text_options', 'qtype_codecpp'));
-                $mform->setType("textoptions[{$idx}][range]", PARAM_TEXT);
-                $mform->addHelpButton("textoptions[{$idx}]", 'text_options', 'qtype_codecpp');
-
-                $mform->hideIf("textoptions[{$idx}]", "edit[{$idx}]",'neq', '1');
-                continue;
-            }
 
         }
 
         $mform->addElement('submit', 'savechanges', "Save Changes");
+    }
+
+    private function addIntegerOptions($idx) {
+        $mform = $this->_form;
+
+        $mform->addElement('text', "int_range[{$idx}]", get_string('int_range', 'qtype_codecpp'));
+        $mform->addHelpButton("int_range[{$idx}]", 'int_range', 'qtype_codecpp');
+        $mform->setType("int_range[{$idx}]", PARAM_TEXT);
+
+        $mform->hideIf("int_range[{$idx}]", "edit[{$idx}]",'neq', '1');
+    }
+
+    private function addFloatOptions($idx) {
+        $mform = $this->_form;
+
+        $mform->addElement('text', "float_range[{$idx}]", get_string('float_range', 'qtype_codecpp'));
+        $mform->addHelpButton("float_range[{$idx}]", 'float_range', 'qtype_codecpp');
+        $mform->setType("float_range[{$idx}]", PARAM_TEXT);
+
+        $mform->hideIf("float_range[{$idx}]", "edit[{$idx}]",'neq', '1');
+    }
+
+    private function addBinaryOptions($idx) {
+        $mform = $this->_form;
+
+        $checkboxes = [
+            $mform->createElement('advcheckbox', "multiplication", "", "*"),
+            $mform->createElement('advcheckbox', "addition", "", "+"),
+            $mform->createElement('advcheckbox', "subtraction", "", "-"),
+            $mform->createElement('advcheckbox', "equals", "", "="),
+            $mform->createElement('advcheckbox', "modulo", "", "%"),
+            $mform->createElement('advcheckbox', "smallerorequal", "", "<="),
+            $mform->createElement('advcheckbox', "smaller", "", "<"),
+            $mform->createElement('advcheckbox', "biggerorequal", "", ">="),
+            $mform->createElement('advcheckbox', "bigger", "", ">"),
+            $mform->createElement('advcheckbox', "equalsequals", "", "=="),
+            $mform->createElement('advcheckbox', "notequals", "", "!=")
+        ];
+
+        $mform->addGroup($checkboxes, "selectedoptions[{$idx}]", get_string('binary_operators', 'qtype_codecpp'));
+        $mform->addHelpButton("selectedoptions[{$idx}]", 'binary_operators', 'qtype_codecpp');
+
+        $mform->hideIf("selectedoptions[{$idx}]", "edit[{$idx}]",'neq', '1');
+    }
+
+    private function addUnaryOptions($idx) {
+        $mform = $this->_form;
+
+        $checkboxes = [
+            $mform->createElement('advcheckbox', "increment", "", "++"),
+            $mform->createElement('advcheckbox', "decrement", "", "--")
+        ];
+        $mform->addGroup($checkboxes, "selectedoptions[{$idx}]", get_string('unary_operators', 'qtype_codecpp'));
+        $mform->addHelpButton("selectedoptions[{$idx}]", 'unary_operators', 'qtype_codecpp');
+
+        $mform->hideIf("selectedoptions[{$idx}]", "edit[{$idx}]",'neq', '1');
+    }
+
+    private function addLogicalOptions($idx) {
+        $mform = $this->_form;
+
+        $checkboxes = [
+            $mform->createElement('advcheckbox', "andoperator", "", "&&"),
+            $mform->createElement('advcheckbox', "oroperator", "", "||")
+        ];
+        $mform->addGroup($checkboxes, "selectedoptions[{$idx}]", get_string('logical_operators', 'qtype_codecpp'));
+        $mform->addHelpButton("selectedoptions[{$idx}]", 'logical_operators', 'qtype_codecpp');
+
+        $mform->hideIf("selectedoptions[{$idx}]", "edit[{$idx}]",'neq', '1');
+    }
+
+    private function addTextOptions($idx, $isText) {
+        $mform = $this->_form;
+
+        $checkboxes = array();
+        if ($isText){
+            $checkboxes[] = $mform->createElement('text', "range", get_string('string_range', 'qtype_codecpp'));
+        }
+
+        $checkboxes += array_merge($checkboxes, [
+            $mform->createElement('advcheckbox', "lowercase", "", get_string('lowercase_letters', 'qtype_codecpp')),
+            $mform->createElement('advcheckbox', "uppercase", "", get_string('uppercase_letters', 'qtype_codecpp')),
+            $mform->createElement('advcheckbox', "digits", "", get_string('digits', 'qtype_codecpp'))
+        ]);
+
+        $mform->addGroup($checkboxes, "textoptions[{$idx}]", get_string('text_options', 'qtype_codecpp'));
+        $mform->setType("textoptions[{$idx}][range]", PARAM_TEXT);
+        $mform->addHelpButton("textoptions[{$idx}]", 'text_options', 'qtype_codecpp');
+
+        $mform->hideIf("textoptions[{$idx}]", "edit[{$idx}]",'neq', '1');
+    }
+
+    private function getDescriptionForOp($operation) {
+        switch ($operation) {
+            case "integer":
+                return "int range";
+
+            case "float":
+                return "float range";
+
+            case "binary_op":
+                return "binary operator";
+
+            case "unary_op":
+                return "unary operator";
+
+            case "logical":
+                return "logical operator";
+
+            case "text":
+                return "text options";
+
+            case "character":
+                return "char options";
+        }
+
+        return "UNKNOWN OP";
     }
 
     private function get_code_label($entry) {
@@ -189,20 +255,27 @@ class question_dataset_dependent_definitions_form extends question_wizard_form {
             $currtext = trim($lines[$i]);
 
             if ((count($lines) - 1) / 2 != $i) {
-                $label = $label . htmlspecialchars($currtext) . html_writer::empty_tag('br');
+                $label .= htmlspecialchars($currtext) . html_writer::empty_tag('br');
                 continue;
             }
 
+            // Do not remove this magic string. I spent days because I don't know how to work with UTF-8 or w.e this is
+            // If this gets removed there will be strange formatting for the element
+            $currtext = preg_replace('/[\x00-\x1F\x7F\xA0]/u', ' ', $currtext);
+
             $from = (int)$entry[1];
             $to = (int)$entry[3];
-            $label = $label . htmlspecialchars(substr($currtext, 0, $from - 1));
-            $label = $label . html_writer::start_tag('strong', array('style' => 'color:red'));
-            $label = $label . htmlspecialchars(substr($currtext, $from-1, $to-$from));
-            $label = $label . html_writer::end_tag('strong');
-            $label = $label . htmlspecialchars(substr($currtext, $to-1, strlen($currtext)));
-            $label = $label . html_writer::empty_tag('br');
+            $before = substr($currtext, 0, $from - 1);
+            $value = substr($currtext, $from-1, $to-$from);
+            $after = substr($currtext, $to-1, strlen($currtext));
+            $label .= htmlspecialchars($before);
+            $label .= html_writer::start_tag('strong', array('style' => 'color:red'));
+            $label .=  htmlspecialchars($value);
+            $label .= html_writer::end_tag('strong');
+            $label .= htmlspecialchars($after);
+            $label .= html_writer::empty_tag('br');
         }
-        $label = $label . html_writer::end_tag('code');
+        $label .= html_writer::end_tag('code');
 
         return $label;
     }

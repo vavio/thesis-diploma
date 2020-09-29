@@ -23,7 +23,7 @@ def get_binary_operation(node):
 def get_unary_operation(node):
     tokens = list(node.get_tokens())
     for token in tokens:
-        if token.spelling == '--' or token.spelling == '++' or token.spelling == '!':
+        if token.spelling  in {'--', '++', '!'}:
             return token.spelling, token.extent.start.column, token.extent.end.column
 
 
@@ -196,21 +196,38 @@ class CodeProcessor:
             )
         elif node.kind == clang.cindex.CursorKind.UNARY_OPERATOR:
             info = get_unary_operation(node)
-            if info[0] in {'++', '--'}:
+            if info is None:
+                # the +, -, *, & ... are also unary which we do not handle
+                pass
+            elif info[0] == '!':
+                # we will ignore the negation for now
+                pass
+            elif info[0] in {'++', '--'}:
                 result.append(
                     ((node.extent.start.line, info[1]),
                      (node.extent.end.line, info[2]),
                      info[0],
                      'unary_op')
                 )
-            elif info[0] == '!':
-                # we will ignore the negation for now
-                pass
 
         for (idx, child) in enumerate(node.get_children()):
+            if node.kind == clang.cindex.CursorKind.UNARY_OPERATOR \
+                    and child.kind in {clang.cindex.CursorKind.INTEGER_LITERAL, clang.cindex.CursorKind.FLOATING_LITERAL}:
+                literal_value = self._extract_key_kinds_from_tree(child)
+                if len(literal_value) == 1:
+                    literal_value = literal_value[0]
+                    start_info = literal_value[0]
+                    end_info = literal_value[1]
+                    exact_value = '-' + str(literal_value[2])
+                    type_info = literal_value[3]
+
+                    start_info = (start_info[0], start_info[1] - 1)
+                    result.append((start_info, end_info, exact_value, type_info))
+                    continue
+
             if node.kind == clang.cindex.CursorKind.CALL_EXPR:
                 name = node.displayname
-                if (name == 'printf' or name == 'scanf') and idx < 2 :
+                if (name == 'printf' or name == 'scanf') and idx < 2:
                     # first child is the name printf/scanf
                     # second child is the formatting string
                     continue
@@ -228,6 +245,7 @@ class CodeProcessor:
     def _extract_ast(self):
         self._save_code()
         idx = clang.cindex.Index.create()
+        print(self._source_code_filename())
         tu = idx.parse(self._source_code_filename(), ['-I', config.CLANG_LIBRARY_DIR])
         return tu.cursor
 
@@ -349,6 +367,7 @@ def construct_code(code, key_locations, new_variation_values):
 
 
 def get_key_locations(code):
+    code = code.replace('\xa0', ' ')
     cp = CodeProcessor(code)
     key_locations = cp.get_key_locations()
     return_list = list()
@@ -377,21 +396,24 @@ def generate_variation(code, edit):
             new_variation.append(kl.generate_variation())
         new_source_code = construct_code(code, key_loc, new_variation)
         new_cp = CodeProcessor(new_source_code)
-        if new_source_code not in output:
-            try:
-                code_output = new_cp.get_output()
-            except TimeoutExpired:
-                print('Timed out for ' + new_cp.filename)
-                continue
 
-            if len(code_output) == 0:
-                continue
+        if new_source_code in output:
+            continue
 
-            output[new_source_code] = code_output
-            return_list.append({
-                'difficulty': new_cp.get_complexity(),
-                'new_source_code': new_source_code,
-                'output': output[new_source_code]
-            })
-            print(new_source_code)
+        try:
+            code_output = new_cp.get_output()
+        except TimeoutExpired:
+            print('Timed out for ' + new_cp.filename)
+            continue
+
+        if len(code_output) == 0:
+            continue
+
+        output[new_source_code] = code_output
+        return_list.append({
+            'difficulty': new_cp.get_complexity(),
+            'new_source_code': new_source_code,
+            'output': output[new_source_code]
+        })
+        print(new_source_code)
     return return_list
