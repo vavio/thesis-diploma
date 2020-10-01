@@ -47,7 +47,7 @@ class question_dataset_dependent_definitions_form extends question_wizard_form {
 
         // Validate the question category.
         if (!$category = $DB->get_record('question_categories',
-                array('id' => $question->category))) {
+            array('id' => $question->category))) {
             print_error('categorydoesnotexist', 'question');
         }
 
@@ -135,6 +135,9 @@ class question_dataset_dependent_definitions_form extends question_wizard_form {
         $mform->setType("int_range[{$idx}]", PARAM_TEXT);
 
         $mform->hideIf("int_range[{$idx}]", "edit[{$idx}]",'neq', '1');
+
+        
+        $this->set_data(array("edit[{$idx}]" => 1));
     }
 
     private function addFloatOptions($idx) {
@@ -261,6 +264,13 @@ class question_dataset_dependent_definitions_form extends question_wizard_form {
 
             // Do not remove this magic string. I spent days because I don't know how to work with UTF-8 or w.e this is
             // If this gets removed there will be strange formatting for the element
+            $splitted = preg_split('/^[\x00-\x1F\x7F\xA0]+/u', $currtext,
+                -1, PREG_SPLIT_NO_EMPTY | PREG_SPLIT_OFFSET_CAPTURE);
+
+            if (!empty($splitted)) {
+                $label .= htmlspecialchars(substr($currtext, 0, $splitted[0][1] - 2));
+            }
+
             $currtext = preg_replace('/[\x00-\x1F\x7F\xA0]/u', ' ', $currtext);
 
             $from = (int)$entry[1];
@@ -268,9 +278,10 @@ class question_dataset_dependent_definitions_form extends question_wizard_form {
             $before = substr($currtext, 0, $from - 1);
             $value = substr($currtext, $from-1, $to-$from);
             $after = substr($currtext, $to-1, strlen($currtext));
+
             $label .= htmlspecialchars($before);
             $label .= html_writer::start_tag('strong', array('style' => 'color:red'));
-            $label .=  htmlspecialchars($value);
+            $label .= htmlspecialchars($value);
             $label .= html_writer::end_tag('strong');
             $label .= htmlspecialchars($after);
             $label .= html_writer::empty_tag('br');
@@ -365,4 +376,5 @@ class question_dataset_dependent_definitions_form extends question_wizard_form {
 
         return preg_match('/^[-+]?\d+(\.?\d+)?:[-+]?\d+(\.?\d+)?$/m', $value);
     }
+
 }

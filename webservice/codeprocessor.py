@@ -210,9 +210,12 @@ class CodeProcessor:
                      'unary_op')
                 )
 
+        children_count = len(list(node.get_children()))
+
         for (idx, child) in enumerate(node.get_children()):
             if node.kind == clang.cindex.CursorKind.UNARY_OPERATOR \
                     and child.kind in {clang.cindex.CursorKind.INTEGER_LITERAL, clang.cindex.CursorKind.FLOATING_LITERAL}:
+                # This is handling the negative int/float literals
                 literal_value = self._extract_key_kinds_from_tree(child)
                 if len(literal_value) == 1:
                     literal_value = literal_value[0]
@@ -226,6 +229,7 @@ class CodeProcessor:
                     continue
 
             if node.kind == clang.cindex.CursorKind.CALL_EXPR:
+                # This is handling the printf/scanf and fprintf/fscanf
                 name = node.displayname
                 if (name == 'printf' or name == 'scanf') and idx < 2:
                     # first child is the name printf/scanf
@@ -236,6 +240,11 @@ class CodeProcessor:
                     # first child is the name fprintf/fscanf
                     # second child is the file pointer
                     # third child is the formatting string
+                    continue
+
+            if node.kind == clang.cindex.CursorKind.VAR_DECL and children_count > 1:
+                # This is handling the array definitions
+                if child.kind == clang.cindex.CursorKind.INTEGER_LITERAL:
                     continue
 
             result.extend(self._extract_key_kinds_from_tree(child))
