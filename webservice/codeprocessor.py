@@ -158,42 +158,52 @@ class CodeProcessor:
         result = list()
         # This whole method can be improved
         if node.kind == clang.cindex.CursorKind.INTEGER_LITERAL:
-            result.append(
-                ((node.extent.start.line, node.extent.start.column),
-                 (node.extent.end.line, node.extent.end.column),
-                 list(node.get_tokens())[0].spelling,
-                 'integer')
-            )
+            result.append({
+                'start_line': node.extent.start.line,
+                'start_column': node.extent.start.column,
+                'end_line': node.extent.end.line,
+                'end_column': node.extent.end.column,
+                'value': list(node.get_tokens())[0].spelling,
+                'type': 'integer'
+            })
         elif node.kind == clang.cindex.CursorKind.BINARY_OPERATOR:
             info = get_binary_operation(node)
             if info[0] in {'+', '-', '*', '=', '%', '<=', '<', '>=', '>' '==', '!='}:
-                result.append(
-                    ((node.extent.start.line, info[1]),
-                     (node.extent.end.line, info[2]),
-                     info[0],
-                     'binary_op')
-                )
+                result.append({
+                    'start_line': node.extent.start.line,
+                    'start_column': info[1],
+                    'end_line': node.extent.end.line,
+                    'end_column': info[2],
+                    'value': info[0],
+                    'type': 'binary_op'
+                })
             elif info[0] in {'&&', '||'}:
-                result.append(
-                    ((node.extent.start.line, info[1]),
-                     (node.extent.end.line, info[2]),
-                     info[0],
-                     'logical')
-                )
+                result.append({
+                    'start_line': node.extent.start.line,
+                    'start_column': info[1],
+                    'end_line': node.extent.end.line,
+                    'end_column': info[2],
+                    'value': info[0],
+                    'type': 'logical'
+                })
         elif node.kind in {clang.cindex.CursorKind.STRING_LITERAL, clang.cindex.CursorKind.CHARACTER_LITERAL}:
-            result.append(
-                ((node.extent.start.line, node.extent.start.column),
-                 (node.extent.end.line, node.extent.end.column),
-                 list(node.get_tokens())[0].spelling,
-                 'text' if node.kind == clang.cindex.CursorKind.STRING_LITERAL else 'character')
-            )
+            result.append({
+                'start_line': node.extent.start.line,
+                'start_column': node.extent.start.column,
+                'end_line': node.extent.end.line,
+                'end_column': node.extent.end.column,
+                'value': list(node.get_tokens())[0].spelling,
+                'type': 'text' if node.kind == clang.cindex.CursorKind.STRING_LITERAL else 'character'
+            })
         elif node.kind == clang.cindex.CursorKind.FLOATING_LITERAL:
-            result.append(
-                ((node.extent.start.line, node.extent.start.column),
-                 (node.extent.end.line, node.extent.end.column),
-                 list(node.get_tokens())[0].spelling,
-                 'float')
-            )
+            result.append({
+                'start_line': node.extent.start.line,
+                'start_column': node.extent.start.column,
+                'end_line': node.extent.end.line,
+                'end_column': node.extent.end.column,
+                'value': list(node.get_tokens())[0].spelling,
+                'type': 'float'
+            })
         elif node.kind == clang.cindex.CursorKind.UNARY_OPERATOR:
             info = get_unary_operation(node)
             if info is None:
@@ -203,12 +213,14 @@ class CodeProcessor:
                 # we will ignore the negation for now
                 pass
             elif info[0] in {'++', '--'}:
-                result.append(
-                    ((node.extent.start.line, info[1]),
-                     (node.extent.end.line, info[2]),
-                     info[0],
-                     'unary_op')
-                )
+                result.append({
+                    'start_line': node.extent.start.line,
+                    'start_column': info[1],
+                    'end_line': node.extent.end.line,
+                    'end_column': info[2],
+                    'value': info[0],
+                    'type': 'unary_op'
+                })
 
         children_count = len(list(node.get_children()))
 
@@ -219,13 +231,8 @@ class CodeProcessor:
                 literal_value = self._extract_key_kinds_from_tree(child)
                 if len(literal_value) == 1:
                     literal_value = literal_value[0]
-                    start_info = literal_value[0]
-                    end_info = literal_value[1]
-                    exact_value = '-' + str(literal_value[2])
-                    type_info = literal_value[3]
-
-                    start_info = (start_info[0], start_info[1] - 1)
-                    result.append((start_info, end_info, exact_value, type_info))
+                    literal_value['start_column'] = literal_value['start_column'] - 1
+                    result.append(literal_value)
                     continue
 
             if node.kind == clang.cindex.CursorKind.CALL_EXPR:
@@ -291,12 +298,12 @@ class KeyLocation:
     re_exclude = re.compile(r'^\^-?\d')
 
     def __init__(self, kl):
-        self.start_row = kl[0][0]
-        self.start_column = kl[0][1]
-        self.end_row = kl[1][0]
-        self.end_column = kl[1][1]
-        self.value = kl[2]
-        self.location_type = kl[3]
+        self.start_line = kl['start_line']
+        self.start_column = kl['start_column']
+        self.end_line = kl['end_line']
+        self.end_column = kl['end_column']
+        self.value = kl['value']
+        self.location_type = kl['type']
         self.extra_info = ""
 
     def set_extra_info(self, line):
@@ -366,9 +373,9 @@ def _str_replace(s, si, ei, new):
 def construct_code(code, key_locations, new_variation_values):
     source_code = code.split('\n')
     variations = list(zip(key_locations, new_variation_values))
-    variations.sort(key=lambda x: (x[0].start_row, -x[0].start_column))
+    variations.sort(key=lambda x: (x[0].start_line, -x[0].start_column))
     for variation in variations:
-        row = variation[0].start_row - 1
+        row = variation[0].start_line - 1
         cs, ce = variation[0].start_column - 1, variation[0].end_column - 1
         source_code[row] = _str_replace(source_code[row], cs, ce, variation[1])
     new_source_code = '\n'.join(source_code)
@@ -381,12 +388,8 @@ def get_key_locations(code):
     key_locations = cp.get_key_locations()
     return_list = list()
 
-    for element in key_locations:
-        temp_list = [element[0][0], element[0][1], element[1][0], element[1][1], element[2], element[3]]
-        return_list.append(';'.join(map(str, temp_list)))
-
-    print(return_list)
-    return return_list
+    print(key_locations)
+    return key_locations
 
 
 def generate_variation(code, edit):

@@ -83,9 +83,14 @@ class question_dataset_dependent_definitions_form extends question_wizard_form {
                 continue;
             }
 
+            $suggested_data = array();
+            if (key_exists('suggested', $datasetentry)) {
+                $suggested_data = $datasetentry['suggested'];
+            }
+
             $mform->addElement('header', "header[{$idx}]", '');
 
-            $edit_type = rtrim($datasetentry[5]);
+            $edit_type = rtrim($datasetentry['type']);
 
             $mform->addElement('html', $this->get_code_label($datasetentry));
             $mform->addElement('advcheckbox', "edit[{$idx}]",
@@ -93,41 +98,39 @@ class question_dataset_dependent_definitions_form extends question_wizard_form {
 
             switch ($edit_type) {
                 case "integer":
-                    $this->addIntegerOptions($idx);
+                    $this->addIntegerOptions($idx, $suggested_data);
                     break;
 
                 case "float":
-                    $this->addFloatOptions($idx);
+                    $this->addFloatOptions($idx, $suggested_data);
                     break;
 
                 case "binary_op":
-                    $this->addBinaryOptions($idx);
+                    $this->addBinaryOptions($idx, $suggested_data);
                     break;
 
                 case "unary_op":
-                    $this->addUnaryOptions($idx);
+                    $this->addUnaryOptions($idx, $suggested_data);
                     break;
 
                 case "logical":
-                    $this->addLogicalOptions($idx);
+                    $this->addLogicalOptions($idx, $suggested_data);
                     break;
 
                 case "text":
-                    $this->addTextOptions($idx, true);
+                    $this->addTextOptions($idx, true, $suggested_data);
                     break;
 
                 case "character":
-                    $this->addTextOptions($idx, false);
+                    $this->addTextOptions($idx, false, $suggested_data);
                     break;
             }
-
-
         }
 
         $mform->addElement('submit', 'savechanges', "Save Changes");
     }
 
-    private function addIntegerOptions($idx) {
+    private function addIntegerOptions($idx, $suggested_data) {
         $mform = $this->_form;
 
         $mform->addElement('text', "int_range[{$idx}]", get_string('int_range', 'qtype_codecpp'));
@@ -136,11 +139,13 @@ class question_dataset_dependent_definitions_form extends question_wizard_form {
 
         $mform->hideIf("int_range[{$idx}]", "edit[{$idx}]",'neq', '1');
 
-        
-        $this->set_data(array("edit[{$idx}]" => 1));
+        if (!empty($suggested_data)) {
+            $this->set_data(array("edit[{$idx}]" => 1));
+            $this->set_data(array("int_range[{$idx}]" => $suggested_data));
+        }
     }
 
-    private function addFloatOptions($idx) {
+    private function addFloatOptions($idx, $suggested_data) {
         $mform = $this->_form;
 
         $mform->addElement('text', "float_range[{$idx}]", get_string('float_range', 'qtype_codecpp'));
@@ -148,9 +153,27 @@ class question_dataset_dependent_definitions_form extends question_wizard_form {
         $mform->setType("float_range[{$idx}]", PARAM_TEXT);
 
         $mform->hideIf("float_range[{$idx}]", "edit[{$idx}]",'neq', '1');
+
+        if (!empty($suggested_data)) {
+            $this->set_data(array("edit[{$idx}]" => 1));
+            $this->set_data(array("float_range[{$idx}]" => $suggested_data));
+        }
     }
 
-    private function addBinaryOptions($idx) {
+    private function addBinaryOptions($idx, $suggested_data) {
+        $binary_ops = array(
+            '*' => 'multiplication',
+            '+' => 'addition',
+            '-' => 'subtraction',
+            '=' => 'equals',
+            '%' => 'modulo',
+            '<=' => 'smallerorequal',
+            '<' => 'smaller',
+            '>=' => 'biggerorequal',
+            '>' => 'bigger',
+            '==' => 'equalsequals',
+            '!=' => 'notequals'
+        );
         $mform = $this->_form;
 
         $checkboxes = [
@@ -171,9 +194,15 @@ class question_dataset_dependent_definitions_form extends question_wizard_form {
         $mform->addHelpButton("selectedoptions[{$idx}]", 'binary_operators', 'qtype_codecpp');
 
         $mform->hideIf("selectedoptions[{$idx}]", "edit[{$idx}]",'neq', '1');
+
+        if (!empty($suggested_data)) {
+            $this->setOperatorData($idx, $binary_ops, explode(";", $suggested_data));
+        }
     }
 
-    private function addUnaryOptions($idx) {
+    private function addUnaryOptions($idx, $suggested_data) {
+        $unary_ops = array('++' => 'increment', '--' => 'decrement');
+
         $mform = $this->_form;
 
         $checkboxes = [
@@ -184,9 +213,15 @@ class question_dataset_dependent_definitions_form extends question_wizard_form {
         $mform->addHelpButton("selectedoptions[{$idx}]", 'unary_operators', 'qtype_codecpp');
 
         $mform->hideIf("selectedoptions[{$idx}]", "edit[{$idx}]",'neq', '1');
+
+        if (!empty($suggested_data)) {
+            $this->setOperatorData($idx, $unary_ops, explode(";", $suggested_data));
+        }
     }
 
-    private function addLogicalOptions($idx) {
+    private function addLogicalOptions($idx, $suggested_data) {
+        $logical_ops = array('&&' => 'andoperator', '||' => 'oroperator');
+
         $mform = $this->_form;
 
         $checkboxes = [
@@ -197,9 +232,15 @@ class question_dataset_dependent_definitions_form extends question_wizard_form {
         $mform->addHelpButton("selectedoptions[{$idx}]", 'logical_operators', 'qtype_codecpp');
 
         $mform->hideIf("selectedoptions[{$idx}]", "edit[{$idx}]",'neq', '1');
+
+        if (!empty($suggested_data)) {
+            $this->setOperatorData($idx, $logical_ops, explode(";", $suggested_data));
+        }
     }
 
-    private function addTextOptions($idx, $isText) {
+    private function addTextOptions($idx, $isText, $suggested_data) {
+        $string_ops = array('lowercase' => 'lowercase', 'uppercase' => 'uppercase', 'digits' => 'digits');
+
         $mform = $this->_form;
 
         $checkboxes = array();
@@ -218,6 +259,24 @@ class question_dataset_dependent_definitions_form extends question_wizard_form {
         $mform->addHelpButton("textoptions[{$idx}]", 'text_options', 'qtype_codecpp');
 
         $mform->hideIf("textoptions[{$idx}]", "edit[{$idx}]",'neq', '1');
+
+        if (!empty($suggested_data)) {
+            $splitted = explode(";", $suggested_data);
+            if ($isText) {
+                $this->set_data(array("selectedoptions[{idx}][range]" => $splitted[0]));
+                $splitted = array_slice($splitted, 1);
+            }
+
+            $this->setOperatorData($idx, $string_ops, $splitted);
+        }
+    }
+
+    private function setOperatorData($idx, $ops, $data) {
+        $this->set_data(array("edit[{$idx}]" => 1));
+        foreach ($data as $item) {
+            $this->set_data(array("selectedoptions[{$idx}][" . $ops[$item] . "]" => "1"));
+        }
+
     }
 
     private function getDescriptionForOp($operation) {
@@ -251,7 +310,7 @@ class question_dataset_dependent_definitions_form extends question_wizard_form {
         $config = get_config('qtype_codecpp');
         $num_lines = $config->code_preview_lines;
 
-        $lines = array_slice($this->question_lines, (int)$entry[0] - $num_lines - 1, 2 * $num_lines + 1);
+        $lines = array_slice($this->question_lines, $entry['start_line'] - $num_lines - 1, 2 * $num_lines + 1);
 
         $label = html_writer::start_tag('code', array('style' => 'color:black'));
         for ($i=0; $i<count($lines); $i++){
@@ -273,8 +332,8 @@ class question_dataset_dependent_definitions_form extends question_wizard_form {
 
             $currtext = preg_replace('/[\x00-\x1F\x7F\xA0]/u', ' ', $currtext);
 
-            $from = (int)$entry[1];
-            $to = (int)$entry[3];
+            $from = (int)$entry['start_column'];
+            $to = (int)$entry['end_column'];
             $before = substr($currtext, 0, $from - 1);
             $value = substr($currtext, $from-1, $to-$from);
             $after = substr($currtext, $to-1, strlen($currtext));

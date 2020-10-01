@@ -86,11 +86,7 @@ class qtype_codecpp extends question_type
         );
         $callresult = qtype_codecpp::call_service("get_key_locations", json_encode($call_data));
         $callresult = json_decode($callresult, true);
-        $result_data = array();
-        for ($i = 0; $i < count($callresult['result']['key_locations']); $i++) {
-            $result_data[] = explode(";", $callresult['result']['key_locations'][$i]);
-        }
-        return $result_data;
+        return $callresult['result']['key_locations'];
     }
 
     // This gets called by editquestion.php after the standard question is saved.
@@ -287,7 +283,7 @@ class qtype_codecpp extends question_type
                 $service_data[$idx] = '';
                 continue;
             }
-            $optype = rtrim($editable[$idx][5]);
+            $optype = rtrim($editable[$idx]['type']);
             switch ($optype) {
                 case "integer":
                     $service_data[$idx] = $form->int_range[$idx];
