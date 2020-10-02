@@ -1,5 +1,6 @@
 from hashlib import md5
 from helper_methods import *
+from suggestion_methods import *
 from complexity_calculator import ComplexityCalculator
 from subprocess import STDOUT, check_output
 import config
@@ -85,93 +86,43 @@ class CodeProcessor:
         result = list()
         # This whole method can be improved
         if node.kind == clang.cindex.CursorKind.INTEGER_LITERAL:
-            result.append(get_integer_data(node))
+            result.append(get_integer_data(node, suggested))
         elif node.kind == clang.cindex.CursorKind.FLOATING_LITERAL:
-            result.append(get_float_data(node))
+            result.append(get_float_data(node, suggested))
         elif node.kind == clang.cindex.CursorKind.BINARY_OPERATOR:
-            binary_data = get_binary_data(node)
+            binary_data = get_binary_data(node, suggested)
             if binary_data is None:
                 pass
             result.append(binary_data)
         elif node.kind in {clang.cindex.CursorKind.STRING_LITERAL, clang.cindex.CursorKind.CHARACTER_LITERAL}:
-            result.append(get_string_data(node, node.kind == clang.cindex.CursorKind.STRING_LITERAL))
+            result.append(get_string_data(node, suggested))
         elif node.kind == clang.cindex.CursorKind.UNARY_OPERATOR:
-            unary_data = get_unary_data(node)
+            unary_data = get_unary_data(node, suggested)
             if unary_data is None:
                 pass
             result.append(unary_data)
 
         children_count = len(list(node.get_children()))
-        # if node.kind == clang.cindex.CursorKind.INIT_LIST_EXPR and suggested is not None:
-        #     suggested = self.extract_range(node)
+
+        if suggested is None:
+            if node.kind == clang.cindex.CursorKind.INIT_LIST_EXPR:
+                values = extract_values(node)
+                suggested = extract_range(values)
 
         for (idx, child) in enumerate(node.get_children()):
-            if self.is_negative_number(node, child):
-                literal_value = self._extract_key_kinds_from_tree(child)
-                if len(literal_value) == 1:
-                    literal_value = literal_value[0]
-                    literal_value['start_column'] = literal_value['start_column'] - 1
-                    result.append(literal_value)
-                    continue
-
-            if self.is_formatting_string(node, idx):
+            if is_negative_number(node, child):
+                # we already added the negative number, no need to add it again
                 continue
 
-            if self.is_array_length(node, child, children_count):
+            if is_formatting_string(node, idx):
+                continue
+
+            if is_array_length(node, child, children_count):
                 continue
 
             result.extend(self._extract_key_kinds_from_tree(child, suggested))
 
         return result
-
-    # @staticmethod
-    # def extract_range(node):
-    #     if node.kind == clang.cindex.CursorKind.INTEGER_LITERAL:
-
-    @staticmethod
-    def is_negative_number(node, child):
-        # This is handling the negative int/float literals
-        if node.kind != clang.cindex.CursorKind.UNARY_OPERATOR:
-            return False
-
-        if child.kind not in {clang.cindex.CursorKind.INTEGER_LITERAL, clang.cindex.CursorKind.FLOATING_LITERAL}:
-            return False
-
-        return True
-
-    @staticmethod
-    def is_formatting_string(node, idx):
-        # This is handling the printf/scanf and fprintf/fscanf
-        if node.kind != clang.cindex.CursorKind.CALL_EXPR:
-            return False
-
-        name = node.displayname
-        if name in {'printf', 'scanf'} and idx < 2:
-            # first child is the name printf/scanf
-            # second child is the formatting string
-            return True
-
-        if name in {'fprintf', 'fscanf'} and idx < 3:
-            # first child is the name fprintf/fscanf
-            # second child is the file pointer
-            # third child is the formatting string
-            return True
-
-        return False
-
-    @staticmethod
-    def is_array_length(node, child, children_count):
-        # This is handling the array definitions
-        if node.kind != clang.cindex.CursorKind.VAR_DECL:
-            return False
-
-        if children_count <= 1:
-            return False
-
-        if child.kind != clang.cindex.CursorKind.INTEGER_LITERAL:
-            return False
-
-        return True
 
     def _extract_ast(self):
         self._save_code()
