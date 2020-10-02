@@ -75,7 +75,7 @@ class CodeProcessor:
         os.system('gcov-10 -r -i ' + self._source_code_filename())
 
     # DFS
-    def _extract_key_kinds_from_tree(self, node):
+    def _extract_key_kinds_from_tree(self, node, suggested=None):
         if node.extent.start.file is not None and str(node.extent.start.file) != self._source_code_filename():
             return list()
 
@@ -85,71 +85,25 @@ class CodeProcessor:
         result = list()
         # This whole method can be improved
         if node.kind == clang.cindex.CursorKind.INTEGER_LITERAL:
-            result.append({
-                'start_line': node.extent.start.line,
-                'start_column': node.extent.start.column,
-                'end_line': node.extent.end.line,
-                'end_column': node.extent.end.column,
-                'value': list(node.get_tokens())[0].spelling,
-                'type': 'integer'
-            })
-        elif node.kind == clang.cindex.CursorKind.BINARY_OPERATOR:
-            info = get_binary_operation(node)
-            if info[0] in {'+', '-', '*', '=', '%', '<=', '<', '>=', '>' '==', '!='}:
-                result.append({
-                    'start_line': node.extent.start.line,
-                    'start_column': info[1],
-                    'end_line': node.extent.end.line,
-                    'end_column': info[2],
-                    'value': info[0],
-                    'type': 'binary_op'
-                })
-            elif info[0] in {'&&', '||'}:
-                result.append({
-                    'start_line': node.extent.start.line,
-                    'start_column': info[1],
-                    'end_line': node.extent.end.line,
-                    'end_column': info[2],
-                    'value': info[0],
-                    'type': 'logical'
-                })
-        elif node.kind in {clang.cindex.CursorKind.STRING_LITERAL, clang.cindex.CursorKind.CHARACTER_LITERAL}:
-            result.append({
-                'start_line': node.extent.start.line,
-                'start_column': node.extent.start.column,
-                'end_line': node.extent.end.line,
-                'end_column': node.extent.end.column,
-                'value': list(node.get_tokens())[0].spelling,
-                'type': 'text' if node.kind == clang.cindex.CursorKind.STRING_LITERAL else 'character'
-            })
+            result.append(get_integer_data(node))
         elif node.kind == clang.cindex.CursorKind.FLOATING_LITERAL:
-            result.append({
-                'start_line': node.extent.start.line,
-                'start_column': node.extent.start.column,
-                'end_line': node.extent.end.line,
-                'end_column': node.extent.end.column,
-                'value': list(node.get_tokens())[0].spelling,
-                'type': 'float'
-            })
+            result.append(get_float_data(node))
+        elif node.kind == clang.cindex.CursorKind.BINARY_OPERATOR:
+            binary_data = get_binary_data(node)
+            if binary_data is None:
+                pass
+            result.append(binary_data)
+        elif node.kind in {clang.cindex.CursorKind.STRING_LITERAL, clang.cindex.CursorKind.CHARACTER_LITERAL}:
+            result.append(get_string_data(node, node.kind == clang.cindex.CursorKind.STRING_LITERAL))
         elif node.kind == clang.cindex.CursorKind.UNARY_OPERATOR:
-            info = get_unary_operation(node)
-            if info is None:
-                # the +, -, *, & ... are also unary which we do not handle
+            unary_data = get_unary_data(node)
+            if unary_data is None:
                 pass
-            elif info[0] == '!':
-                # we will ignore the negation for now
-                pass
-            elif info[0] in {'++', '--'}:
-                result.append({
-                    'start_line': node.extent.start.line,
-                    'start_column': info[1],
-                    'end_line': node.extent.end.line,
-                    'end_column': info[2],
-                    'value': info[0],
-                    'type': 'unary_op'
-                })
+            result.append(unary_data)
 
         children_count = len(list(node.get_children()))
+        # if node.kind == clang.cindex.CursorKind.INIT_LIST_EXPR and suggested is not None:
+        #     suggested = self.extract_range(node)
 
         for (idx, child) in enumerate(node.get_children()):
             if self.is_negative_number(node, child):
@@ -166,9 +120,13 @@ class CodeProcessor:
             if self.is_array_length(node, child, children_count):
                 continue
 
-            result.extend(self._extract_key_kinds_from_tree(child))
+            result.extend(self._extract_key_kinds_from_tree(child, suggested))
 
         return result
+
+    # @staticmethod
+    # def extract_range(node):
+    #     if node.kind == clang.cindex.CursorKind.INTEGER_LITERAL:
 
     @staticmethod
     def is_negative_number(node, child):
