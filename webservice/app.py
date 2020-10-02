@@ -1,10 +1,10 @@
 from flask import Flask, jsonify, abort, make_response, request
-from codeprocessor import *
+from flask_methods import *
 import dbm
 from os import path
 import clang.cindex
 import config
-from werkzeug.exceptions import HTTPException
+import os
 
 app = Flask(__name__)
 
@@ -32,9 +32,9 @@ def init_dbm():
 
 
 @app.route('/get_key_locations', methods=['POST'])
-def gkl():
+def get_key_locations():
     temp = {
-        'key_locations': get_key_locations(request.json['source_code'])
+        'key_locations': extract_key_locations(request.json['source_code'])
     }
     return jsonify({'result': temp}), 201
 
