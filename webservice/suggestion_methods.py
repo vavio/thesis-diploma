@@ -11,7 +11,7 @@ def check_increasing(seq: list, start: int):
     return -1
 
 
-def extract_range(set_values: set):
+def extract_range(set_values: set, add_one: bool):
     values = sorted(set_values)
 
     length = len(values)
@@ -24,6 +24,9 @@ def extract_range(set_values: set):
 
     if isinstance(values[0], float):
         return "{}:{}".format(values[0], values[-1])
+
+    if add_one:
+        values.append(values[-1] + 1)
 
     ret_value = []
     start = 0

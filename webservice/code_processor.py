@@ -108,7 +108,7 @@ class CodeProcessor:
         if suggested is None:
             if node.kind == clang.cindex.CursorKind.INIT_LIST_EXPR:
                 values = extract_array_values(node)
-                suggested = extract_range(values)
+                suggested = extract_range(values, False)
 
         for (idx, child) in enumerate(node.get_children()):
             if is_variable_declaration(node):
@@ -159,9 +159,9 @@ class CodeProcessor:
 
                 values = values.union(extract_switch_values(child))
 
-            suggested = extract_range(values)
-            print(name)
-            print(suggested)
+            suggested = extract_range(values, True)
+            # print(name)
+            # print(suggested)
             return {name: suggested} if len(suggested) != 0 else {}
 
         ret_value = {}
