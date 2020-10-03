@@ -1,4 +1,4 @@
-from subprocess import TimeoutExpired
+from subprocess import TimeoutExpired, CalledProcessError
 from code_processor import CodeProcessor
 from key_locations import KeyLocation
 
@@ -18,7 +18,7 @@ def generate_variation(code, edit):
     key_locations = cp.get_key_locations()
     output = {}
     output_hash = set()
-    timed_out = set()
+    error_hash = set()
     return_list = list()
 
     try:
@@ -28,9 +28,9 @@ def generate_variation(code, edit):
             'output': cp.get_output()
         })
         output_hash.add(hash(cp.code))
-    except TimeoutExpired:
-        print('Timed out for ' + cp.filename)
-        timed_out.add(hash(cp.code))
+    except TimeoutExpired or CalledProcessError:
+        print('Timed out for: ' + cp.filename)
+        error_hash.add(hash(cp.code))
 
     for i in range(100):
         if len(output) >= 30:
@@ -51,17 +51,20 @@ def generate_variation(code, edit):
         if new_code_hash in output_hash:
             continue
 
-        if new_code_hash in timed_out:
+        if new_code_hash in error_hash:
             continue
 
         try:
             code_output = new_cp.get_output()
+            output_hash.add(new_code_hash)
         except TimeoutExpired:
-            print('Timed out for ' + new_cp.filename)
-            timed_out.add(new_code_hash)
+            print('Timed out for: ' + new_cp.filename)
+            error_hash.add(new_code_hash)
             continue
-
-        output_hash.add(new_code_hash)
+        except CalledProcessError:
+            print('Division with 0 for: ' + new_cp.filename)
+            error_hash.add(new_code_hash)
+            continue
 
         if len(code_output) == 0:
             continue
