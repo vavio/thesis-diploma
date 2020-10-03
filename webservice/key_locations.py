@@ -13,7 +13,7 @@ class KeyLocation:
         self.start_column = kl['start_column']
         self.end_line = kl['end_line']
         self.end_column = kl['end_column']
-        self.value = kl['value']
+        self.value = str(kl['value'])
         self.location_type = kl['type']
         self.extra_info = ""
 

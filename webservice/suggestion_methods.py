@@ -48,7 +48,7 @@ def extract_range(set_values: set):
 
         start = end + 1
 
-    return ";".join(ret_value)
+    return ",".join(ret_value)
 
 
 def extract_value(node):

@@ -94,16 +94,14 @@ class CodeProcessor:
             result.append(get_float_data(node, suggested))
         elif node.kind == clang.cindex.CursorKind.BINARY_OPERATOR:
             binary_data = get_binary_data(node, suggested)
-            if binary_data is None:
-                pass
-            result.append(binary_data)
+            if binary_data is not None:
+                result.append(binary_data)
         elif node.kind in {clang.cindex.CursorKind.STRING_LITERAL, clang.cindex.CursorKind.CHARACTER_LITERAL}:
             result.append(get_string_data(node, suggested))
         elif node.kind == clang.cindex.CursorKind.UNARY_OPERATOR:
             unary_data = get_unary_data(node, suggested)
-            if unary_data is None:
-                pass
-            result.append(unary_data)
+            if unary_data is not None:
+                result.append(unary_data)
 
         children_count = len(list(node.get_children()))
 
@@ -127,7 +125,8 @@ class CodeProcessor:
                 continue
 
             result.extend(self._extract_key_kinds_from_tree(child,
-                                                            suggested=suggested, var_suggestions=var_suggestions))
+                                                            suggested=suggested,
+                                                            var_suggestions=var_suggestions))
 
         return result
 
@@ -154,7 +153,7 @@ class CodeProcessor:
             name = None
             values = set()
             for (idx, child) in enumerate(node.get_children()):
-                if idx == 0:
+                if child.kind.is_unexposed():
                     name = child.displayname
                     continue
 
