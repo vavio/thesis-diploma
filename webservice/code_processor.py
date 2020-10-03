@@ -97,7 +97,7 @@ class CodeProcessor:
             if binary_data is not None:
                 result.append(binary_data)
         elif node.kind in {clang.cindex.CursorKind.STRING_LITERAL, clang.cindex.CursorKind.CHARACTER_LITERAL}:
-            result.append(get_string_data(node, suggested))
+            result.append(get_string_data(node))
         elif node.kind == clang.cindex.CursorKind.UNARY_OPERATOR:
             unary_data = get_unary_data(node, suggested)
             if unary_data is not None:
@@ -112,7 +112,7 @@ class CodeProcessor:
 
         for (idx, child) in enumerate(node.get_children()):
             if is_variable_declaration(node):
-                suggested = var_suggestions.get(node.displayname)
+                suggested = var_suggestions.get(node.spelling)
 
             if is_negative_number(node, child):
                 # we already added the negative number, no need to add it again
@@ -154,7 +154,7 @@ class CodeProcessor:
             values = set()
             for (idx, child) in enumerate(node.get_children()):
                 if child.kind.is_unexposed():
-                    name = child.displayname
+                    name = child.spelling
                     continue
 
                 values = values.union(extract_switch_values(child))

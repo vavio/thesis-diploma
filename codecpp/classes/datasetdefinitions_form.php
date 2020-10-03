@@ -261,13 +261,17 @@ class question_dataset_dependent_definitions_form extends question_wizard_form {
         $mform->hideIf("textoptions[{$idx}]", "edit[{$idx}]",'neq', '1');
 
         if (!empty($suggested_data)) {
+            $this->set_data(array("edit[{$idx}]" => 1));
+
             $splitted = explode(";", $suggested_data);
             if ($isText) {
-                $this->set_data(array("selectedoptions[{idx}][range]" => $splitted[0]));
+                $this->set_data(array("textoptions[{$idx}][range]" => $splitted[0]));
                 $splitted = array_slice($splitted, 1);
             }
 
-            $this->setOperatorData($idx, $string_ops, $splitted);
+            foreach ($splitted as $item) {
+                $this->set_data(array("textoptions[{$idx}][" . $string_ops[$item] . "]" => "1"));
+            }
         }
     }
 
@@ -276,7 +280,6 @@ class question_dataset_dependent_definitions_form extends question_wizard_form {
         foreach ($data as $item) {
             $this->set_data(array("selectedoptions[{$idx}][" . $ops[$item] . "]" => "1"));
         }
-
     }
 
     private function getDescriptionForOp($operation) {

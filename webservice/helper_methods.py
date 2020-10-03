@@ -58,14 +58,32 @@ def get_binary_data(node, suggested):
     return None
 
 
-def get_string_data(node, suggested) -> dict:
+def get_string_data(node) -> dict:
+    is_text = node.kind == clang.cindex.CursorKind.STRING_LITERAL
+    suggested_list = list()
+    value = list(node.get_tokens())[0].spelling
+    without = value[1:-1]
+    if is_text:
+        strlen = len(node.spelling) - 2
+        suggested_list.append("{}:{}".format(max(1, strlen - 1), strlen + 2))
+
+    if any(char.islower() for char in without):
+        suggested_list.append("lowercase")
+
+    if any(char.isupper() for char in without):
+        suggested_list.append("uppercase")
+
+    if any(char.isdigit() for char in value[1:-1]):
+        suggested_list.append("digits")
+
+    suggested = ';'.join(suggested_list)
     return {
         'start_line': node.extent.start.line,
         'start_column': node.extent.start.column,
         'end_line': node.extent.end.line,
         'end_column': node.extent.end.column,
-        'value': list(node.get_tokens())[0].spelling,
-        'type': 'text' if node.kind == clang.cindex.CursorKind.STRING_LITERAL else 'character',
+        'value': value,
+        'type': 'text' if is_text else 'character',
         **get_suggested(suggested)
     }
 
@@ -119,7 +137,7 @@ def is_formatting_string(node, idx: int, children_count: int) -> bool:
     if node.kind != clang.cindex.CursorKind.CALL_EXPR:
         return False
 
-    name = node.displayname
+    name = node.spelling
     # TODO this should be improved to ignore ONLY the formatting part of string
     if name in {'printf', 'scanf'} and children_count > 2 > idx:
         # first child is the name printf/scanf
