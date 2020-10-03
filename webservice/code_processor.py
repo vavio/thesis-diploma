@@ -76,7 +76,10 @@ class CodeProcessor:
         os.system('gcov-10 -r -i ' + self._source_code_filename())
 
     # DFS
-    def _extract_key_kinds_from_tree(self, node, suggested=None):
+    def _extract_key_kinds_from_tree(self, node, suggested=None, var_suggestions=None) -> list:
+        if var_suggestions is None:
+            var_suggestions = dict()
+
         if node.extent.start.file is not None and str(node.extent.start.file) != self._source_code_filename():
             return list()
 
@@ -106,21 +109,25 @@ class CodeProcessor:
 
         if suggested is None:
             if node.kind == clang.cindex.CursorKind.INIT_LIST_EXPR:
-                values = extract_values(node)
+                values = extract_array_values(node)
                 suggested = extract_range(values)
 
         for (idx, child) in enumerate(node.get_children()):
+            if is_variable_declaration(node):
+                suggested = var_suggestions.get(node.displayname)
+
             if is_negative_number(node, child):
                 # we already added the negative number, no need to add it again
                 continue
 
-            if is_formatting_string(node, idx):
+            if is_formatting_string(node, idx, children_count):
                 continue
 
             if is_array_length(node, child, children_count):
                 continue
 
-            result.extend(self._extract_key_kinds_from_tree(child, suggested))
+            result.extend(self._extract_key_kinds_from_tree(child,
+                                                            suggested=suggested, var_suggestions=var_suggestions))
 
         return result
 
@@ -133,7 +140,37 @@ class CodeProcessor:
 
     def get_key_locations(self):
         root = self._extract_ast()
-        return self._extract_key_kinds_from_tree(root)
+        var_suggestions = self._get_var_suggestion(root)
+        return self._extract_key_kinds_from_tree(root, suggested=None, var_suggestions=var_suggestions)
+
+    def _get_var_suggestion(self, node) -> dict:
+        if node.extent.start.file is not None and str(node.extent.start.file) != self._source_code_filename():
+            return dict()
+
+        if node.kind == clang.cindex.CursorKind.RETURN_STMT:
+            return dict()
+
+        if node.kind == clang.cindex.CursorKind.SWITCH_STMT:
+            name = None
+            values = set()
+            for (idx, child) in enumerate(node.get_children()):
+                if idx == 0:
+                    name = child.displayname
+                    continue
+
+                values = values.union(extract_switch_values(child))
+
+            suggested = extract_range(values)
+            print(name)
+            print(suggested)
+            return {name: suggested} if len(suggested) != 0 else {}
+
+        ret_value = {}
+
+        for child in node.get_children():
+            ret_value = {**ret_value, **self._get_var_suggestion(child)}
+
+        return ret_value
 
     def _get_line_execution_counts(self):
         self._compile_for_gcov()
@@ -154,5 +191,5 @@ class CodeProcessor:
         cc = ComplexityCalculator(self._extract_ast(), self._get_line_execution_counts(), self._source_code_filename())
         return cc.calculate_complexity()
 
-    def check_compilation(self):
+    def check_compilation(self) -> bool:
         return self._standard_compile() == 0

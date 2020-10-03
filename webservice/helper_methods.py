@@ -114,18 +114,19 @@ def is_negative_number(node, child) -> bool:
     return True
 
 
-def is_formatting_string(node, idx: int) -> bool:
+def is_formatting_string(node, idx: int, children_count: int) -> bool:
     # This is handling the printf/scanf and fprintf/fscanf
     if node.kind != clang.cindex.CursorKind.CALL_EXPR:
         return False
 
     name = node.displayname
-    if name in {'printf', 'scanf'} and idx < 2:
+    # TODO this should be improved to ignore ONLY the formatting part of string
+    if name in {'printf', 'scanf'} and children_count > 2 > idx:
         # first child is the name printf/scanf
         # second child is the formatting string
         return True
 
-    if name in {'fprintf', 'fscanf'} and idx < 3:
+    if name in {'fprintf', 'fscanf'} and children_count > 3 > idx:
         # first child is the name fprintf/fscanf
         # second child is the file pointer
         # third child is the formatting string
@@ -146,3 +147,7 @@ def is_array_length(node, child, children_count: int) -> bool:
         return False
 
     return True
+
+
+def is_variable_declaration(node) -> bool:
+    return node.kind == clang.cindex.CursorKind.VAR_DECL

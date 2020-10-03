@@ -59,10 +59,15 @@ class ComplexityCalculator:
 
         key = None
 
+        # TODO VVV update
         if node.kind in {clang.cindex.CursorKind.BINARY_OPERATOR, clang.cindex.CursorKind.COMPOUND_ASSIGNMENT_OPERATOR}:
-            key = get_binary_operation(node)[0]
+            key = get_binary_data(node, None)
+            if key is not None:
+                key = key['value']
         elif node.kind == clang.cindex.CursorKind.UNARY_OPERATOR:
-            key = get_unary_operation(node)
+            key = get_unary_data(node, None)
+            if key is not None:
+                key = key['value']
         elif node.kind in {clang.cindex.CursorKind.FOR_STMT, clang.cindex.CursorKind.WHILE_STMT, clang.cindex.CursorKind.DO_STMT, clang.cindex.CursorKind.IF_STMT}:
             key = node.kind
 
