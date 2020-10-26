@@ -47,10 +47,11 @@ Install packages
 ```shell script
 apt install libllvm-10-ocaml-dev llvm-10-doc llvm-10-examples
 apt install clang-tools-10 clang-10-doc libclang-10-dev
+apt install g++-10 libpq-dev
 apt install python3-pip python3-clang-10 python3-psycopg2 python3-flask
 ```
 
-(*Optional* but ** highly recommended*)
+(*Optional* but **highly recommended**)
 Install virtualenv
 ```shell script
 python3 -m venv codecpp
