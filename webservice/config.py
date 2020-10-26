@@ -1,5 +1,5 @@
-CLANG_LIBRARY_FILE = '/usr/local/Cellar/llvm/10.0.0_3/lib/libclang.dylib'
-CLANG_LIBRARY_DIR = '/Library/Developer/CommandLineTools/usr/lib/'
+CLANG_LIBRARY_FILE = '/usr/lib/llvm-10/lib/libclang.so'
+CLANG_LIBRARY_DIR = '/usr/lib/'
 
 EXECUTION_TIMEOUT = 0.5
 

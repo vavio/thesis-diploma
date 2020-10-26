@@ -33,7 +33,7 @@ def generate_variation(code, edit):
         error_hash.add(hash(cp.code))
 
     for i in range(100):
-        if len(output) >= 30:
+        if len(return_list) >= 30:
             break
 
         new_variation = list()

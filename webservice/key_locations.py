@@ -57,14 +57,16 @@ class KeyLocation:
         if self.location_type in {"text", "character"}:
 
             splitted = self.extra_info.split(";")
-            numbers = self.generate_numbers(splitted[0])
-            if len(numbers) == 0:
+            if self.location_type == "text":
+                numbers = self.generate_numbers(splitted[0])
+                # leave out the range
+                splitted = splitted[1:]
+            else:
                 # it is intentionally -2 to calculate "" or '' in the value
                 numbers = [len(self.value) - 2]
 
             characters = list()
-            # leave out the range
-            splitted = splitted[1:]
+
             for s in splitted:
                 if s == "lowercase":
                     characters.extend(string.ascii_lowercase)
