@@ -38,11 +38,11 @@ class qtype_codecpp_renderer extends qtype_renderer {
             question_display_options $options) {
         $question = $qa->get_question();
         $question_id = $qa->get_last_qt_var('_qid_');
-        $currentanswer = $qa->get_last_qt_var('answer');
         $currenttext = $qa->get_last_qt_var('_qtext_');
         $qa->questiontext = $currenttext;
 
-        $inputname = $qa->get_qt_field_name('_qans_');
+        $currentanswer = $qa->get_last_qt_var('answer');
+        $inputname = $qa->get_qt_field_name('answer');
         $inputattributes = array(
             'type' => 'text',
             'name' => $inputname,
