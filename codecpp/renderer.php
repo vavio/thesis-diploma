@@ -92,7 +92,6 @@ class qtype_codecpp_renderer extends qtype_renderer {
     }
 
     public function correct_response(question_attempt $qa) {
-        $question = $qa->get_question();
         $currentanswer = $qa->get_last_qt_var('_qans_');
         return "The answer is: " . $currentanswer;
     }

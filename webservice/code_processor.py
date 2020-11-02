@@ -140,7 +140,17 @@ class CodeProcessor:
     def get_key_locations(self):
         root = self._extract_ast()
         var_suggestions = self._get_var_suggestion(root)
-        return self._extract_key_kinds_from_tree(root, suggested=None, var_suggestions=var_suggestions)
+        retValue = self._extract_key_kinds_from_tree(root, suggested=None, var_suggestions=var_suggestions)
+
+        for value in retValue:
+            if 'suggestion' in value:
+                continue
+
+            if value['type'] in {'integer', 'float'}:
+                varValue = value['value']
+                value['suggested'] = '{start}:{end}'.format(start=varValue - 15, end=varValue + 15)
+
+        return retValue
 
     def _get_var_suggestion(self, node) -> dict:
         if node.extent.start.file is not None and str(node.extent.start.file) != self._source_code_filename():
