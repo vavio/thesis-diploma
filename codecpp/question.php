@@ -111,13 +111,7 @@ class qtype_codecpp_question extends question_graded_automatically {
     }
 
     public function grade_response(array $response) {
-        if (($response['answer'] == $this->variation_result)
-            || (abs(floatval($response['answer']) - floatval($this->variation_result)) <= 0.01)){
-            $fraction = 1;
-        }
-        else {
-            $fraction = 0;
-        }
+        $fraction = $response['answer'] == $this->variation_result ? 1 : 0;
         return array($fraction, question_state::graded_state_for_fraction($fraction));
     }
 }

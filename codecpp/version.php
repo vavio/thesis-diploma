@@ -25,7 +25,7 @@
 defined('MOODLE_INTERNAL') || die();
 
 $plugin->component = 'qtype_codecpp';
-$plugin->version   = 2020103100;
+$plugin->version   = 2020111400;
 
 $plugin->requires  = 2020060900;
 

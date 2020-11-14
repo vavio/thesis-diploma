@@ -28,6 +28,7 @@ $string['choose_element'] = 'Choose element';
 $string['questiondatasets'] = 'CodeCPP question datasets';
 $string['questiondatasets_help'] = 'Select values or specify range for each variable which is in red';
 $string['pleaseselectananswer'] = 'Please select an answer.';
+$string['question_text'] = 'What is the output of the code?';
 $string['answercolon'] = 'Answer: ';
 $string['selectone'] = 'Select one:';
 $string['pluginname'] = 'CodeCPP';

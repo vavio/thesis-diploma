@@ -148,7 +148,7 @@ class CodeProcessor:
 
             if value['type'] in {'integer', 'float'}:
                 varValue = value['value']
-                value['suggested'] = '{start}:{end}'.format(start=varValue - 15, end=varValue + 15)
+                value['suggested'] = '{start}:{end}'.format(start=varValue - 8, end=varValue + 8)
 
         return retValue
 

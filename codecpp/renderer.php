@@ -61,12 +61,15 @@ class qtype_codecpp_renderer extends qtype_renderer {
         $questiontext = $this->format_newquestiontext($qa, $currenttext);
         $input = html_writer::empty_tag('input', $inputattributes) . $feedbackimg;
         $result = html_writer::tag('div', $questiontext, array('class' => 'qtext'));
+        $result .= html_writer::tag('div', get_string('question_text', 'qtype_codecpp'), array('class' => 'qtext'));
 
         $config = get_config('qtype_codecpp');
         if ($config->text_image) {
             $text_image = codecpp_quiz_cache::get_text_image($question_id);
-            $result = html_writer::img('data:image/png;base64,' . $text_image,
+            $result = html_writer::tag('div', get_string('question_text', 'qtype_codecpp'), array('class' => 'qtext'));
+            $result .= html_writer::img('data:image/png;base64,' . $text_image,
                 'qtext', array('class' => 'qtext'));
+
         }
 
         $result .= html_writer::start_div('ablock form-inline');
