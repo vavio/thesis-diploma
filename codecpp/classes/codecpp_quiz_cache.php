@@ -78,7 +78,7 @@ class codecpp_quiz_cache
         global $CFG;
         $config = get_config('qtype_codecpp');
 
-        $font = $CFG->dirroot . '/question/type/codecpp/fonts/JetBrainsMono-Regular.ttf';
+        $font = $CFG->dirroot . '/question/type/codecpp/fonts/JetBrainsMonoNL-Regular.ttf';
         $font_size = $config->font_size;
         $line_height = $font_size + 10;
         $padding = $config->padding;

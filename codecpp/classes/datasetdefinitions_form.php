@@ -315,7 +315,7 @@ class question_dataset_dependent_definitions_form extends question_wizard_form {
 
         $lines = array_slice($this->question_lines, $entry['start_line'] - $num_lines - 1, 2 * $num_lines + 1);
 
-        $label = html_writer::start_tag('code', array('style' => 'color:black'));
+        $label = html_writer::start_div("codecpp-code");
         for ($i=0; $i<count($lines); $i++){
             $currtext = trim($lines[$i]);
 
@@ -348,20 +348,20 @@ class question_dataset_dependent_definitions_form extends question_wizard_form {
             $label .= htmlspecialchars($after);
             $label .= html_writer::empty_tag('br');
         }
-        $label .= html_writer::end_tag('code');
+        $label .= html_writer::end_div();
 
         return $label;
     }
 
     private function get_code() {
-        $label = html_writer::start_tag('code', array('style' => 'color:black'));
+        $label = html_writer::start_div("codecpp-code");
 
         foreach ($this->question_lines as $line) {
             $label = $label . htmlspecialchars($line);
             $label = $label . html_writer::empty_tag('br');
         }
 
-        $label = $label . html_writer::end_tag('code');
+        $label .= html_writer::end_div();
         return $label;
     }
 

@@ -1,5 +1,4 @@
 from hashlib import md5
-from helper_methods import *
 from suggestion_methods import *
 from complexity_calculator import ComplexityCalculator
 from subprocess import STDOUT, check_output

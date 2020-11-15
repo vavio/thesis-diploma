@@ -54,9 +54,9 @@ echo $OUTPUT->header();
 echo $OUTPUT->heading($title);
 
 echo html_writer::start_div('que content');
+echo "Code";
 echo html_writer::start_div('formulation clearfix');
-echo html_writer::start_div('qtext');
-//array('font-family' => 'SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace')
+echo html_writer::start_div('codecpp-code');
 
 // Output the question.
 echo format_text($question->text, FORMAT_PLAIN);
@@ -64,10 +64,13 @@ echo format_text($question->text, FORMAT_PLAIN);
 echo html_writer::end_div();
 echo html_writer::end_div();
 
+echo "Output";
 echo html_writer::start_div('outcome clearfix');
 echo html_writer::start_div('feedback');
 
-echo sprintf("Output: %s", $question->result);
+echo html_writer::start_div('codecpp-code');
+echo $question->result;
+echo html_writer::end_div();
 
 echo html_writer::end_div();
 echo html_writer::end_div();

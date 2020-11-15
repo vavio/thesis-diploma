@@ -2,3 +2,14 @@
 .que.codecpp .answer div.r1 {
     padding: 0.3em;
 }
+
+@font-face {
+    font-family: JetBrainsMono-Regular;
+    src: url("/question/type/codecpp/fonts/JetBrainsMonoNL-Regular.ttf");
+}
+
+.codecpp-code {
+    font-family: JetBrainsMono-Regular, monospace;
+    font-size: 15px;
+    color: black;
+}
